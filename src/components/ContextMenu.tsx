@@ -34,6 +34,7 @@ export interface ContextMenuProps {
   onAddColumn: (tableId: string) => void;
   onCopySql: (tableId: string) => void;
   onRenameGroup: (groupId: string) => void;
+  onRenameTable: (tableId: string) => void;
   onDeleteGroup: (groupId: string) => void;
   onAddTable: () => void;
   onAutoLayout: () => void;
@@ -60,6 +61,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onAddColumn,
   onCopySql,
   onRenameGroup,
+  onRenameTable,
   onDeleteGroup,
   onAddTable,
   onAutoLayout,
@@ -225,6 +227,20 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
           <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate whitespace-nowrap">
             {tables.find((t) => t.id === targetId)?.name || 'Tabel'}
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              onRenameTable(targetId);
+              onClose();
+            }}
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Edit2 className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Ganti Nama Tabel</span>
+            </div>
+          </button>
 
           <button
             type="button"

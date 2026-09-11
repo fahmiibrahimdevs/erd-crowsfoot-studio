@@ -606,6 +606,54 @@ export const App: React.FC = () => {
     [updateSchema]
   );
 
+  const handleRenameTable = useCallback(
+    async (tableId: string, newName?: string) => {
+      const currentTables = tablesRef.current;
+      const target = currentTables.find((t) => t.id === tableId);
+      if (!target) return;
+
+      let finalName = newName;
+
+      // Jika newName tidak dipassing (misal dari Context Menu), minta input user via SweetAlert2 prompt dialog
+      if (finalName === undefined) {
+        const inputName = await promptDialog({
+          title: 'Ganti Nama Tabel',
+          text: `Masukkan nama baru untuk tabel "${target.name}":`,
+          inputValue: target.name,
+          inputPlaceholder: 'Contoh: users, orders, order_items...',
+          confirmText: 'Ya, Ubah',
+          cancelText: 'Batal',
+          validate: (val) => {
+            const cleanVal = val.trim().toLowerCase().replace(/\s+/g, '_');
+            if (!cleanVal) return 'Nama tabel tidak boleh kosong!';
+            const exists = currentTables.some(
+              (t) => t.id !== tableId && t.name.toLowerCase() === cleanVal
+            );
+            if (exists) {
+              return `Nama tabel "${cleanVal}" sudah digunakan oleh tabel lain!`;
+            }
+            return null;
+          },
+        });
+
+        if (!inputName) {
+          return; // Pengguna menekan Batal
+        }
+        finalName = inputName;
+      }
+
+      const clean = finalName.trim().toLowerCase().replace(/\s+/g, '_');
+      if (!clean || clean === target.name) return;
+
+      updateSchema(
+        (prev) => prev.map((t) => (t.id === tableId ? { ...t, name: clean } : t)),
+        (prev) => prev
+      );
+      showToast(`Nama tabel diubah menjadi "${clean}"`, 'success');
+    },
+    [updateSchema]
+  );
+
   // Toggle Lock/Unlock position for tables or groups
   const handleToggleLock = useCallback((nodeIds: string[]) => {
     if (nodeIds.length === 0) return;
@@ -2989,6 +3037,7 @@ export const App: React.FC = () => {
         onAddColumn={handleAddColumnToTable}
         onCopySql={handleCopySql}
         onRenameGroup={handleRenameGroup}
+        onRenameTable={handleRenameTable}
         onDeleteGroup={handleDeleteGroup}
         onAddTable={handleAddTable}
         onAutoLayout={handleAutoLayout}
