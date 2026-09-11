@@ -1263,6 +1263,36 @@ export const App: React.FC = () => {
     setHoveredRelationId(relId);
   }, []);
 
+  const handleClickColumn = useCallback(
+    (tableId: string, colId: string) => {
+      setSelectedTableId(tableId);
+      setSelectedTableIds([tableId]);
+      setSelectedGroupId(null);
+
+      const matchRel = relations.find(
+        (r) =>
+          (r.sourceTableId === tableId && r.sourceColumnId === colId) ||
+          (r.targetTableId === tableId && r.targetColumnId === colId)
+      );
+
+      if (!matchRel) {
+        setHoveredRelationId(null);
+        setSelectedRelationId(null);
+        return;
+      }
+
+      // Toggle highlight state if clicking the same column
+      if (selectedRelationId === matchRel.id || hoveredRelationId === matchRel.id) {
+        setHoveredRelationId(null);
+        setSelectedRelationId(null);
+      } else {
+        setSelectedRelationId(matchRel.id);
+        setHoveredRelationId(matchRel.id);
+      }
+    },
+    [relations, selectedRelationId, hoveredRelationId]
+  );
+
   const handleHoverColumn = useCallback(
     (tableId: string | null, colId: string | null) => {
       if (!tableId || !colId) {
@@ -1385,6 +1415,7 @@ export const App: React.FC = () => {
             onAddColumn: handleAddColumnToTable,
             onReorderColumns: handleReorderColumns,
             onHoverColumn: handleHoverColumn,
+            onClickColumn: handleClickColumn,
           },
         };
       });
@@ -1552,6 +1583,7 @@ export const App: React.FC = () => {
     handleAddColumnToTable,
     handleReorderColumns,
     handleHoverColumn,
+    handleClickColumn,
     handleUngroup,
     handleRenameGroup,
     handleDeleteGroup,

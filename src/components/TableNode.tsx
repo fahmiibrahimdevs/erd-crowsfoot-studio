@@ -18,6 +18,7 @@ export interface TableNodeData {
   onEditColumn?: (tableId: string, columnId: string) => void;
   onReorderColumns?: (tableId: string, columns: ColumnData[]) => void;
   onHoverColumn?: (tableId: string | null, colId: string | null) => void;
+  onClickColumn?: (tableId: string, colId: string) => void;
 }
 
 export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
@@ -31,6 +32,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
     onAddColumn,
     onReorderColumns,
     onHoverColumn,
+    onClickColumn,
   } = nodeData;
 
   const [expandedEnumColIds, setExpandedEnumColIds] = useState<Set<string>>(new Set());
@@ -212,8 +214,6 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             <div
               key={col.id}
               draggable={true}
-              onMouseEnter={() => onHoverColumn?.(table.id, col.id)}
-              onMouseLeave={() => onHoverColumn?.(null, null)}
               onDragStart={(e) => handleDragStart(e, col.id)}
               onDragOver={(e) => handleDragOver(e, col.id)}
               onDragLeave={handleDragLeave}
@@ -223,9 +223,18 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                 isBeingDragged ? 'opacity-30 scale-[0.98]' : ''
               }`}
             >
-              {/* Column Header Row */}
+              {/* Column Header Row: Click to Toggle Relationship Highlight */}
               <div
-                className={`relative px-2.5 h-8 flex items-center justify-between text-xs transition-all group/row ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClickColumn?.(table.id, col.id);
+                }}
+                title={
+                  foreignKeys[col.id] || col.isPrimary
+                    ? `Klik untuk sorot relasi garis database (${table.name}.${col.name})`
+                    : undefined
+                }
+                className={`relative px-2.5 h-8 flex items-center justify-between text-xs transition-all group/row cursor-pointer ${
                   isColHighlighted
                     ? 'bg-sky-500/20 dark:bg-sky-500/25 ring-1 ring-sky-400/50 shadow-xs'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
