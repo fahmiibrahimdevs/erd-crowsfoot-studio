@@ -9,7 +9,7 @@ export interface TableNodeData {
   table: TableData;
   isSelected?: boolean;
   foreignKeys?: Record<string, string>; // colId -> "targetTable.targetCol"
-  onSelectTable?: (tableId: string) => void;
+  onSelectTable?: (tableId: string, event?: React.MouseEvent) => void;
   onDeleteTable?: (tableId: string) => void;
   onAddColumn?: (tableId: string) => void;
   onDeleteColumn?: (tableId: string, columnId: string) => void;
@@ -129,7 +129,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
 
   return (
     <div
-      onClick={() => onSelectTable?.(table.id)}
+      onClick={(e) => onSelectTable?.(table.id, e)}
       className={`group relative w-[280px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border transition-all duration-200 shadow-xl dark:shadow-2xl shadow-slate-200/80 dark:shadow-black/50 ${
         selected
           ? 'border-sky-500/80 ring-2 ring-sky-500/30 shadow-sky-500/10'

@@ -403,12 +403,32 @@ export const App: React.FC = () => {
     }
   }, [historyRedo, setNodes]);
 
-  // Handler for table actions triggered inside TableNode
-  const handleSelectTable = useCallback((tableId: string) => {
-    setSelectedTableId((prev) => (prev === tableId ? prev : tableId));
-    setSelectedTableIds((prev) => (prev.length === 1 && prev[0] === tableId ? prev : [tableId]));
-    setSelectedGroupId((prev) => (prev === null ? prev : null));
-    setSelectedRelationId((prev) => (prev === null ? prev : null));
+  // Handler for table actions triggered inside TableNode (with Ctrl/Shift/Cmd Multi-Selection)
+  const handleSelectTable = useCallback((tableId: string, event?: React.MouseEvent) => {
+    const isMultiKey = Boolean(event?.ctrlKey || event?.metaKey || event?.shiftKey);
+    if (isMultiKey) {
+      setSelectedTableIds((prev) => {
+        const isAlreadySelected = prev.includes(tableId);
+        const next = isAlreadySelected
+          ? prev.filter((id) => id !== tableId)
+          : [...prev, tableId];
+        if (next.length === 1) {
+          setSelectedTableId(next[0]);
+        } else if (next.length === 0) {
+          setSelectedTableId(null);
+        } else if (!isAlreadySelected) {
+          setSelectedTableId(tableId);
+        }
+        return next;
+      });
+      setSelectedGroupId(null);
+      setSelectedRelationId(null);
+    } else {
+      setSelectedTableId((prev) => (prev === tableId ? prev : tableId));
+      setSelectedTableIds((prev) => (prev.length === 1 && prev[0] === tableId ? prev : [tableId]));
+      setSelectedGroupId((prev) => (prev === null ? prev : null));
+      setSelectedRelationId((prev) => (prev === null ? prev : null));
+    }
   }, []);
 
   const handleSelectGroup = useCallback((groupId: string) => {
@@ -2592,17 +2612,37 @@ export const App: React.FC = () => {
             routingStyle={routingStyle}
             onChangeRoutingStyle={handleRoutingStyleChange}
             theme={theme}
-            onNodeClick={(_, node) => {
+            onNodeClick={(event, node) => {
               if (node.type === 'groupNode') {
                 setSelectedGroupId(node.id);
                 setSelectedTableId(null);
                 setSelectedTableIds([]);
                 setSelectedRelationId(null);
               } else {
-                setSelectedTableId(node.id);
-                setSelectedTableIds([node.id]);
-                setSelectedGroupId(null);
-                setSelectedRelationId(null);
+                const isMultiKey = event.ctrlKey || event.metaKey || event.shiftKey;
+                if (isMultiKey) {
+                  setSelectedTableIds((prev) => {
+                    const isAlreadySelected = prev.includes(node.id);
+                    const next = isAlreadySelected
+                      ? prev.filter((id) => id !== node.id)
+                      : [...prev, node.id];
+                    if (next.length === 1) {
+                      setSelectedTableId(next[0]);
+                    } else if (next.length === 0) {
+                      setSelectedTableId(null);
+                    } else if (!isAlreadySelected) {
+                      setSelectedTableId(node.id);
+                    }
+                    return next;
+                  });
+                  setSelectedGroupId(null);
+                  setSelectedRelationId(null);
+                } else {
+                  setSelectedTableId(node.id);
+                  setSelectedTableIds([node.id]);
+                  setSelectedGroupId(null);
+                  setSelectedRelationId(null);
+                }
               }
             }}
             onEdgeClick={(_, edge) => {
