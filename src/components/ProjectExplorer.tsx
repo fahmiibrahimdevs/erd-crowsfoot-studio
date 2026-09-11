@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Folder,
   FolderOpen,
@@ -67,7 +68,6 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   );
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<{ type: 'file' | 'folder'; parentId: string | null } | null>(null);
   const [newItemName, setNewItemName] = useState('');
 
@@ -104,22 +104,18 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     }
   }, [isCreatingNew]);
 
-  // Close context menu & popup menus on click outside or Escape
+  // Close context menu on click outside or Escape
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (contextMenu.isOpen && (!contextMenuRef.current || !contextMenuRef.current.contains(target))) {
         setContextMenu((prev) => ({ ...prev, isOpen: false }));
       }
-      if (!target.closest('.explorer-menu-container')) {
-        setActiveMenuId(null);
-      }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setContextMenu((prev) => ({ ...prev, isOpen: false }));
-        setActiveMenuId(null);
       }
     };
 
@@ -161,7 +157,6 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
 
   const startRename = (item: ErdTreeItem, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setActiveMenuId(null);
     setContextMenu((prev) => ({ ...prev, isOpen: false }));
     setEditingItemId(item.id);
     setEditingName(item.name);
@@ -178,7 +173,6 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
 
   const handleStartCreate = (type: 'file' | 'folder', parentId: string | null = null, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setActiveMenuId(null);
     setContextMenu((prev) => ({ ...prev, isOpen: false }));
     if (parentId) {
       setExpandedFolderIds((prev) => new Set([...prev, parentId]));
@@ -204,7 +198,6 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
 
   const handleDelete = async (item: ErdTreeItem, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setActiveMenuId(null);
     setContextMenu((prev) => ({ ...prev, isOpen: false }));
     const isFolder = item.type === 'folder';
     const confirmed = await confirmDialog({
@@ -230,22 +223,62 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     }
   };
 
-  // Open context menu for item (file/folder)
-  const handleItemContextMenu = (e: React.MouseEvent, type: 'file' | 'folder', item: ErdTreeItem) => {
+  // Open context menu from 3-dots action button
+  const openItemMenuFromButton = (e: React.MouseEvent, type: 'file' | 'folder', item: ErdTreeItem) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveMenuId(null);
 
-    // Calculate clamped screen position
-    const menuWidth = 200;
-    const menuHeight = type === 'file' ? 220 : 200;
-    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
-    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+    // Toggle off if clicking same item button
+    if (contextMenu.isOpen && contextMenu.targetItem?.id === item.id) {
+      setContextMenu((prev) => ({ ...prev, isOpen: false }));
+      return;
+    }
+
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuWidth = 210;
+    const menuHeight = type === 'file' ? 240 : 220;
+
+    let x = rect.left;
+    let y = rect.bottom + 4;
+
+    if (x + menuWidth > window.innerWidth - 8) {
+      x = Math.max(8, rect.right - menuWidth);
+    }
+    if (y + menuHeight > window.innerHeight - 8) {
+      y = Math.max(8, rect.top - menuHeight - 4);
+    }
 
     setContextMenu({
       isOpen: true,
-      x: Math.max(10, x),
-      y: Math.max(10, y),
+      x,
+      y,
+      targetType: type,
+      targetItem: item,
+    });
+  };
+
+  // Open context menu on right click for item (file/folder)
+  const handleItemContextMenu = (e: React.MouseEvent, type: 'file' | 'folder', item: ErdTreeItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const menuWidth = 210;
+    const menuHeight = type === 'file' ? 240 : 220;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth - 8) {
+      x = Math.max(8, e.clientX - menuWidth);
+    }
+    if (y + menuHeight > window.innerHeight - 8) {
+      y = Math.max(8, e.clientY - menuHeight);
+    }
+
+    setContextMenu({
+      isOpen: true,
+      x,
+      y,
       targetType: type,
       targetItem: item,
     });
@@ -255,17 +288,24 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   const handleRootContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveMenuId(null);
 
-    const menuWidth = 210;
+    const menuWidth = 220;
     const menuHeight = 220;
-    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
-    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth - 8) {
+      x = Math.max(8, e.clientX - menuWidth);
+    }
+    if (y + menuHeight > window.innerHeight - 8) {
+      y = Math.max(8, e.clientY - menuHeight);
+    }
 
     setContextMenu({
       isOpen: true,
-      x: Math.max(10, x),
-      y: Math.max(10, y),
+      x,
+      y,
       targetType: 'root',
       targetItem: null,
     });
@@ -289,8 +329,8 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   // Render a tree item (file or folder)
   const renderItem = (item: ErdTreeItem, depth: number = 0) => {
     const isEditing = editingItemId === item.id;
-    const isMenuOpen = activeMenuId === item.id;
     const isDragging = draggingItemId === item.id;
+    const isItemContextActive = contextMenu.isOpen && contextMenu.targetItem?.id === item.id;
 
     if (item.type === 'folder') {
       const isExpanded = expandedFolderIds.has(item.id);
@@ -347,8 +387,8 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                 ? 'opacity-40 cursor-grabbing bg-slate-200/50 dark:bg-slate-800/50'
                 : isDragOver
                 ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500 ring-2 ring-sky-500/40 shadow-sm scale-[1.01]'
-                : isMenuOpen || (contextMenu.isOpen && contextMenu.targetItem?.id === item.id)
-                ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/30'
+                : isItemContextActive
+                ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/40'
                 : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -401,45 +441,22 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   type="button"
                   title="Tambah File di Folder Ini"
                   onClick={(e) => handleStartCreate('file', item.id, e)}
-                  className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                  className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
                 >
                   <FilePlus className="w-3 h-3" />
                 </button>
-                <div className="relative explorer-menu-container">
-                  <button
-                    type="button"
-                    title="Menu Opsi"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenuId(isMenuOpen ? null : item.id);
-                    }}
-                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
-                  >
-                    <MoreVertical className="w-3 h-3" />
-                  </button>
-
-                  {isMenuOpen && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-100"
-                    >
-                      <button
-                        onClick={(e) => startRename(item, e)}
-                        className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
-                      >
-                        <Edit2 className="w-3 h-3 text-slate-500" />
-                        <span>Ganti Nama</span>
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(item, e)}
-                        className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Hapus Folder</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  title="Menu Opsi Folder"
+                  onClick={(e) => openItemMenuFromButton(e, 'folder', item)}
+                  className={`p-1 rounded transition-colors cursor-pointer ${
+                    isItemContextActive
+                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100'
+                      : 'hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <MoreVertical className="w-3 h-3" />
+                </button>
               </div>
             )}
           </div>
@@ -508,8 +525,8 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
             ? 'opacity-40 cursor-grabbing bg-slate-200/50 dark:bg-slate-800/50'
             : isActive
             ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30 font-semibold shadow-xs'
-            : isMenuOpen || (contextMenu.isOpen && contextMenu.targetItem?.id === file.id)
-            ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/30'
+            : isItemContextActive
+            ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/40'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
         }`}
       >
@@ -554,64 +571,18 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
               {file.tables?.length || 0} tbl
             </span>
 
-            <div className="relative explorer-menu-container">
-              <button
-                type="button"
-                title="Opsi File"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuId(isMenuOpen ? null : file.id);
-                }}
-                className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-all"
-              >
-                <MoreVertical className="w-3 h-3" />
-              </button>
-
-              {isMenuOpen && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute right-0 top-full mt-1 w-38 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-1 z-50 animate-in fade-in zoom-in-95 duration-100"
-                >
-                  <button
-                    onClick={(e) => startRename(file, e)}
-                    className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
-                  >
-                    <Edit2 className="w-3 h-3 text-slate-500" />
-                    <span>Ganti Nama</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenuId(null);
-                      onDuplicateFile(file.id);
-                    }}
-                    className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
-                  >
-                    <Copy className="w-3 h-3 text-slate-500" />
-                    <span>Duplikat File</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenuId(null);
-                      onExportFile(file.id);
-                    }}
-                    className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
-                  >
-                    <Download className="w-3 h-3 text-slate-500" />
-                    <span>Download .erd</span>
-                  </button>
-                  <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
-                  <button
-                    onClick={(e) => handleDelete(file, e)}
-                    className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Hapus File</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              type="button"
+              title="Menu Opsi File"
+              onClick={(e) => openItemMenuFromButton(e, 'file', file)}
+              className={`p-1 rounded transition-all cursor-pointer ${
+                isItemContextActive
+                  ? 'opacity-100 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100'
+                  : 'opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <MoreVertical className="w-3 h-3" />
+            </button>
           </div>
         )}
       </div>
@@ -788,242 +759,253 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
       </div>
 
       {/* =========================================================================
-         Floating Right-Click Context Menu (Matte Slate Studio Design System)
+         Floating Right-Click / Button Context Menu (Matte Slate Studio Design System)
+         Rendered via createPortal to bypass container backdrop-filter & layout clipping
          ========================================================================= */}
-      {contextMenu.isOpen && (
-        <div
-          ref={contextMenuRef}
-          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          onClick={(e) => e.stopPropagation()}
-          className="fixed z-50 w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100 select-none font-sans"
-        >
-          {/* Target Title Header */}
-          {contextMenu.targetItem && (
-            <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2">
-              {contextMenu.targetType === 'folder' ? (
-                <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              ) : (
-                <FileCode2 className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-              )}
-              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
-                {contextMenu.targetItem.name}
-              </span>
-            </div>
-          )}
-
-          {/* Context Menu for FILE */}
-          {contextMenu.targetType === 'file' && contextMenu.targetItem && (
-            <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (contextMenu.targetItem) {
-                    onSelectFile(contextMenu.targetItem.id);
-                  }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <ExternalLink className="w-3.5 h-3.5 text-sky-500" />
-                <span>Buka Diagram</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    startRename(contextMenu.targetItem, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                <span>Ganti Nama (Rename)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (contextMenu.targetItem) {
-                    onDuplicateFile(contextMenu.targetItem.id);
-                  }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                <span>Duplikat File</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (contextMenu.targetItem) {
-                    onExportFile(contextMenu.targetItem.id);
-                  }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-slate-400" />
-                <span>Download .erd File</span>
-              </button>
-
-              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    handleDelete(contextMenu.targetItem, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Hapus File</span>
-              </button>
-            </div>
-          )}
-
-          {/* Context Menu for FOLDER */}
-          {contextMenu.targetType === 'folder' && contextMenu.targetItem && (
-            <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    handleStartCreate('file', contextMenu.targetItem.id, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <FilePlus className="w-3.5 h-3.5 text-sky-500" />
-                <span>File Baru di Folder Ini</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    handleStartCreate('folder', contextMenu.targetItem.id, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
-                <span>Subfolder Baru</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (contextMenu.targetItem) {
-                    toggleFolder(contextMenu.targetItem.id);
-                  }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                {expandedFolderIds.has(contextMenu.targetItem.id) ? (
-                  <>
-                    <Folder className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Tutup Folder</span>
-                  </>
+      {contextMenu.isOpen &&
+        createPortal(
+          <div
+            ref={contextMenuRef}
+            style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
+            className="fixed z-[9999] w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100 select-none font-sans"
+          >
+            {/* Target Title Header */}
+            {contextMenu.targetItem ? (
+              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2">
+                {contextMenu.targetType === 'folder' ? (
+                  <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 ) : (
-                  <>
-                    <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Buka Folder</span>
-                  </>
+                  <FileCode2 className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                 )}
-              </button>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
+                  {contextMenu.targetItem.name}
+                </span>
+              </div>
+            ) : (
+              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
+                  Explorer Workspace
+                </span>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    startRename(contextMenu.targetItem, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                <span>Ganti Nama (Rename)</span>
-              </button>
+            {/* Context Menu for FILE */}
+            {contextMenu.targetType === 'file' && contextMenu.targetItem && (
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (contextMenu.targetItem) {
+                      onSelectFile(contextMenu.targetItem.id);
+                    }
+                    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Buka Diagram</span>
+                </button>
 
-              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      startRename(contextMenu.targetItem, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Ganti Nama (Rename)</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (contextMenu.targetItem) {
-                    handleDelete(contextMenu.targetItem, e);
-                  }
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Hapus Folder</span>
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (contextMenu.targetItem) {
+                      onDuplicateFile(contextMenu.targetItem.id);
+                    }
+                    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Duplikat File</span>
+                </button>
 
-          {/* Context Menu for ROOT / BLANK AREA */}
-          {contextMenu.targetType === 'root' && (
-            <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={(e) => handleStartCreate('file', null, e)}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <FilePlus className="w-3.5 h-3.5 text-sky-500" />
-                <span>Buat File ERD Baru</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (contextMenu.targetItem) {
+                      onExportFile(contextMenu.targetItem.id);
+                    }
+                    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Download .erd File</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={(e) => handleStartCreate('folder', null, e)}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
-                <span>Buat Folder Baru</span>
-              </button>
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
-              <button
-                type="button"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  fileInputRef.current?.click();
-                }}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <UploadCloud className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Upload / Import .erd File</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      handleDelete(contextMenu.targetItem, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus File</span>
+                </button>
+              </div>
+            )}
 
-              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+            {/* Context Menu for FOLDER */}
+            {contextMenu.targetType === 'folder' && contextMenu.targetItem && (
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      handleStartCreate('file', contextMenu.targetItem.id, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <FilePlus className="w-3.5 h-3.5 text-sky-500" />
+                  <span>File Baru di Folder Ini</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleExpandAll}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <ChevronsDown className="w-3.5 h-3.5 text-slate-400" />
-                <span>Buka Semua Folder</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      handleStartCreate('folder', contextMenu.targetItem.id, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Subfolder Baru</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleCollapseAll}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <ChevronsRight className="w-3.5 h-3.5 text-slate-400" />
-                <span>Tutup Semua Folder</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (contextMenu.targetItem) {
+                      toggleFolder(contextMenu.targetItem.id);
+                    }
+                    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  {expandedFolderIds.has(contextMenu.targetItem.id) ? (
+                    <>
+                      <Folder className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Tutup Folder</span>
+                    </>
+                  ) : (
+                    <>
+                      <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Buka Folder</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      startRename(contextMenu.targetItem, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Ganti Nama (Rename)</span>
+                </button>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (contextMenu.targetItem) {
+                      handleDelete(contextMenu.targetItem, e);
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus Folder</span>
+                </button>
+              </div>
+            )}
+
+            {/* Context Menu for ROOT / BLANK AREA */}
+            {contextMenu.targetType === 'root' && (
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={(e) => handleStartCreate('file', null, e)}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <FilePlus className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Buat File ERD Baru</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleStartCreate('folder', null, e)}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Buat Folder Baru</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                    fileInputRef.current?.click();
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Upload / Import .erd File</span>
+                </button>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                <button
+                  type="button"
+                  onClick={handleExpandAll}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <ChevronsDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Buka Semua Folder</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCollapseAll}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <ChevronsRight className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Tutup Semua Folder</span>
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
