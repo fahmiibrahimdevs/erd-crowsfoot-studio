@@ -1429,11 +1429,11 @@ export const App: React.FC = () => {
 
           const sourcePoint: Point = {
             x: sIsLeft ? sPos.x : sPos.x + 280,
-            y: sPos.y + 68 + Math.max(0, sColIdx) * 32,
+            y: sPos.y + 63 + Math.max(0, sColIdx) * 32,
           };
           const targetPoint: Point = {
             x: tIsLeft ? tPos.x : tPos.x + 280,
-            y: tPos.y + 68 + Math.max(0, tColIdx) * 32,
+            y: tPos.y + 63 + Math.max(0, tColIdx) * 32,
           };
 
           const sourcePosition = sIsLeft ? Position.Left : Position.Right;
@@ -1672,14 +1672,14 @@ export const App: React.FC = () => {
       const sIsLeft = sourceSide === 'left';
       const tIsLeft = targetSide === 'left';
 
-      // Physical handle position in DOM: exactly 68px + colIndex * 32px for dead-center arc hop alignment
+      // Physical handle position in DOM: exactly 63px + colIndex * 32px for dead-center arc hop alignment
       const sourcePoint: Point = {
         x: sIsLeft ? sPos.x : sPos.x + 280,
-        y: sPos.y + 68 + Math.max(0, sColIdx) * 32,
+        y: sPos.y + 63 + Math.max(0, sColIdx) * 32,
       };
       const targetPoint: Point = {
         x: tIsLeft ? tPos.x : tPos.x + 280,
-        y: tPos.y + 68 + Math.max(0, tColIdx) * 32,
+        y: tPos.y + 63 + Math.max(0, tColIdx) * 32,
       };
 
       const sourcePosition = sIsLeft ? Position.Left : Position.Right;

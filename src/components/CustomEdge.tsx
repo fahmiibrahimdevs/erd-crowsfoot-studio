@@ -164,16 +164,14 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
 
   const isInternalEdge = edgeData?.isInternalEdge ?? false;
 
-  // Calculate Base Waypoints (Prioritize precomputed waypoints from App to eliminate redundant calculation)
+  // Calculate Base Waypoints strictly anchored to live DOM sourcePoint and targetPoint
   let computedWaypoints: Point[];
   if (livePoints) {
     computedWaypoints = livePoints;
-  } else if (edgeData?.precomputedWaypoints && edgeData.precomputedWaypoints.length >= 2) {
-    computedWaypoints = edgeData.precomputedWaypoints;
   } else if (relation?.customPath?.waypoints && relation.customPath.waypoints.length >= 4) {
     const saved = relation.customPath.waypoints;
     const pts = saved.map((p) => ({ ...p }));
-    // Lock endpoints to current source/target positions while preserving intermediate shape
+    // Lock endpoints strictly to live DOM source/target positions while preserving intermediate shape
     pts[0] = { ...sourcePoint };
     pts[1] = { x: pts[1].x, y: sourcePoint.y };
     pts[pts.length - 1] = { ...targetPoint };
@@ -194,7 +192,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
         targetPoint,
       ];
     } else if (sourcePosition === Position.Right && targetPosition === Position.Right) {
-      const commonX = Math.max(sourcePoint.x, targetPoint.x) + 24 + laneIndex * 14;
+      const commonX = Math.max(sourcePoint.x, targetPoint.x) + 36 + laneIndex * 14;
       computedWaypoints = [
         sourcePoint,
         { x: commonX, y: sourcePoint.y },
@@ -202,7 +200,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
         targetPoint,
       ];
     } else if (sourcePosition === Position.Left && targetPosition === Position.Left) {
-      const commonX = Math.min(sourcePoint.x, targetPoint.x) - 24 - laneIndex * 14;
+      const commonX = Math.min(sourcePoint.x, targetPoint.x) - 36 - laneIndex * 14;
       computedWaypoints = [
         sourcePoint,
         { x: commonX, y: sourcePoint.y },
@@ -223,7 +221,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
       });
     }
   } else {
-    // Smart Auto Multi-Step Calculation with Obstacle Avoidance
+    // Smart Auto Multi-Step Calculation with Obstacle Avoidance from exact DOM sourcePoint/targetPoint
     computedWaypoints = computeSmartOrthogonalPath({
       source: sourcePoint,
       target: targetPoint,
