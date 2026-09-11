@@ -12,6 +12,8 @@ import {
   Maximize2,
   Palette,
   Loader2,
+  Boxes,
+  EyeOff,
 } from 'lucide-react';
 import { TableData, RelationshipData, SqlDialect, ErdGroup } from '../../types/schema';
 import { generateSql } from '../../utils/sqlGenerator';
@@ -58,11 +60,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [imageScale, setImageScale] = useState<1 | 2 | 3 | 4>(3);
   const [imageBgMode, setImageBgMode] = useState<'current' | 'dark' | 'light' | 'transparent'>('current');
   const [imageCropMode, setImageCropMode] = useState<'all' | 'viewport'>('all');
+  const [showGroups, setShowGroups] = useState<boolean>(true);
 
   // Calculate live bounds and estimated dimensions
   const bounds = useMemo(() => {
-    return calculateDiagramBounds(nodes, edges, tables, groups);
-  }, [nodes, edges, tables, groups]);
+    return calculateDiagramBounds(nodes, edges, tables, groups, showGroups);
+  }, [nodes, edges, tables, groups, showGroups]);
 
   const estimatedDimensions = useMemo(() => {
     const pad = 80;
@@ -147,6 +150,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         backgroundMode: imageBgMode,
         pattern: 'solid',
         cropMode: imageCropMode,
+        showGroups,
         padding: 80,
         filename: projectName || 'er-diagram',
       };
@@ -176,6 +180,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           backgroundMode: imageBgMode,
           pattern: 'solid',
           cropMode: imageCropMode,
+          showGroups,
           padding: 80,
         },
         nodes,
@@ -208,7 +213,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 Export Schema & Diagram
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30 font-semibold">
-                  HD Engine
+                  Clean HD Engine
                 </span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -240,7 +245,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <ImageIcon className="w-4 h-4" />
             <span>Gambar Diagram (Super HD)</span>
             <span className="text-[9px] font-mono uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">
-              Auto Crop
+              Auto Framing
             </span>
           </button>
 
@@ -422,6 +427,41 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Clean Export Features & Group Toggle Box */}
+            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-2.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Boxes className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                      Tampilkan Bingkai Grup Modul
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Sertakan kotak grouping dan nama domain modul ({groups.length} grup aktif).
+                    </div>
+                  </div>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showGroups}
+                    disabled={groups.length === 0}
+                    onChange={(e) => setShowGroups(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500 disabled:opacity-40"></div>
+                </label>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                <EyeOff className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>
+                  <strong>Clean Export Engine Aktif:</strong> Tombol editor (+ tambah kolom, tombol hapus, pegangan drag, dan bulatan port relasi) otomatis disembunyikan untuk menghasilkan gambar arsitektur yang bersih.
+                </span>
               </div>
             </div>
           </div>

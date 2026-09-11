@@ -63,7 +63,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
         width: Math.max(340, width),
         height: Math.max(200, height),
       }}
-      className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 pointer-events-auto ${
+      className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 pointer-events-auto group-node-container ${
         selected
           ? 'border-sky-500/80 bg-sky-500/5 ring-4 ring-sky-500/20 shadow-xl shadow-sky-500/10'
           : 'border-slate-300 dark:border-slate-800/80 bg-slate-100/30 dark:bg-slate-900/20 hover:border-slate-400 dark:hover:border-slate-700'
@@ -128,7 +128,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1 ml-1 border-l border-slate-200 dark:border-slate-800 pl-1.5 nodrag">
+          <div className="flex items-center gap-1 ml-1 border-l border-slate-200 dark:border-slate-800 pl-1.5 nodrag export-hide">
             {!isEditing && (
               <button
                 type="button"

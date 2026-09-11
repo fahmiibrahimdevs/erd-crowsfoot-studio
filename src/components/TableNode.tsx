@@ -137,7 +137,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   return (
     <div
       onClick={(e) => onSelectTable?.(table.id, e)}
-      className={`group relative w-[280px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border transition-all duration-200 shadow-xl dark:shadow-2xl shadow-slate-200/80 dark:shadow-black/50 ${
+      className={`group relative w-[280px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border transition-all duration-200 shadow-xl dark:shadow-2xl shadow-slate-200/80 dark:shadow-black/50 table-node-container ${
         selected
           ? 'border-sky-500/80 ring-2 ring-sky-500/30 shadow-sky-500/10'
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
@@ -172,7 +172,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity export-hide">
           <button
             title="Tambah Kolom"
             onClick={(e) => {
@@ -259,7 +259,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   {/* Grip Drag Handle */}
                   <span
                     title="Tarik untuk memindahkan urutan kolom"
-                    className="opacity-0 group-hover/row:opacity-70 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-sky-400 nodrag p-0.5 shrink-0"
+                    className="opacity-0 group-hover/row:opacity-70 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-sky-400 nodrag p-0.5 shrink-0 export-hide"
                   >
                     <GripVertical className="w-3 h-3" />
                   </span>
@@ -412,7 +412,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           e.stopPropagation();
           onAddColumn?.(table.id);
         }}
-        className="w-full py-1.5 px-3 bg-slate-50/80 dark:bg-slate-950/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 flex items-center justify-center gap-1.5 transition-colors cursor-pointer rounded-b-xl nodrag"
+        className="w-full py-1.5 px-3 bg-slate-50/80 dark:bg-slate-950/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 flex items-center justify-center gap-1.5 transition-colors cursor-pointer rounded-b-xl nodrag export-hide"
       >
         <Plus className="w-3 h-3" />
         <span>Tambah Kolom</span>

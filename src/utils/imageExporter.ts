@@ -8,6 +8,7 @@ export interface ImageExportOptions {
   backgroundMode: 'current' | 'dark' | 'light' | 'transparent';
   pattern: 'dot-grid' | 'solid';
   cropMode: 'all' | 'viewport';
+  showGroups?: boolean;
   padding?: number;
   filename?: string;
 }
@@ -28,7 +29,8 @@ export const calculateDiagramBounds = (
   nodes: Node[],
   edges: Edge[],
   tables: TableData[],
-  groups: ErdGroup[] = []
+  groups: ErdGroup[] = [],
+  showGroups = true
 ): DiagramBounds => {
   if (nodes.length === 0 && tables.length === 0) {
     return { minX: 0, minY: 0, maxX: 1200, maxY: 800, width: 1200, height: 800 };
@@ -41,6 +43,8 @@ export const calculateDiagramBounds = (
 
   // 1. Calculate from Nodes
   nodes.forEach((node) => {
+    if (!showGroups && node.type === 'groupNode') return;
+
     const x = node.position?.x ?? 0;
     const y = node.position?.y ?? 0;
 
@@ -147,11 +151,12 @@ export const generateDiagramImage = async (
     scale = 3,
     backgroundMode = 'current',
     cropMode = 'all',
+    showGroups = true,
     padding = 80,
     filename: customFilename,
   } = options;
 
-  const bounds = calculateDiagramBounds(nodes, edges, tables, groups);
+  const bounds = calculateDiagramBounds(nodes, edges, tables, groups, showGroups);
   const bgColor = resolveBackgroundColor(backgroundMode, format);
 
   const finalWidth = cropMode === 'all' ? Math.ceil(bounds.width + padding * 2) : viewportElem.offsetWidth;
@@ -160,17 +165,29 @@ export const generateDiagramImage = async (
   const originalTransform = viewportElem.style.transform;
   const originalTransformOrigin = viewportElem.style.transformOrigin;
 
+  // Activate clean export class on DOM
+  document.body.classList.add('export-clean-mode');
+  if (!showGroups) {
+    document.body.classList.add('hide-groups');
+  }
+
   // Filter elements that shouldn't appear in clean exported images
   const filterNode = (node: HTMLElement) => {
     if (!node || !node.classList) return true;
     const cl = node.classList;
     if (
+      cl.contains('export-hide') ||
       cl.contains('react-flow__controls') ||
       cl.contains('react-flow__minimap') ||
       cl.contains('react-flow__panel') ||
       cl.contains('react-flow__attribution') ||
+      cl.contains('react-flow__handle') ||
+      cl.contains('table-handle') ||
       cl.contains('nodrag-tools')
     ) {
+      return false;
+    }
+    if (!showGroups && (cl.contains('group-node-container') || node.getAttribute('data-type') === 'groupNode')) {
       return false;
     }
     return true;
@@ -213,7 +230,9 @@ export const generateDiagramImage = async (
       filename,
     };
   } finally {
-    // Restore original styles
+    // Restore original styles & classes
+    document.body.classList.remove('export-clean-mode');
+    document.body.classList.remove('hide-groups');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }
@@ -234,9 +253,9 @@ export const copyDiagramImageToClipboard = async (
     throw new Error('Gagal menemukan elemen kanvas diagram');
   }
 
-  const { scale = 2, backgroundMode = 'current', cropMode = 'all', padding = 80 } = options;
+  const { scale = 2, backgroundMode = 'current', cropMode = 'all', showGroups = true, padding = 80 } = options;
 
-  const bounds = calculateDiagramBounds(nodes, edges, tables, groups);
+  const bounds = calculateDiagramBounds(nodes, edges, tables, groups, showGroups);
   const bgColor = resolveBackgroundColor(backgroundMode, 'png');
 
   const finalWidth = cropMode === 'all' ? Math.ceil(bounds.width + padding * 2) : viewportElem.offsetWidth;
@@ -244,6 +263,11 @@ export const copyDiagramImageToClipboard = async (
 
   const originalTransform = viewportElem.style.transform;
   const originalTransformOrigin = viewportElem.style.transformOrigin;
+
+  document.body.classList.add('export-clean-mode');
+  if (!showGroups) {
+    document.body.classList.add('hide-groups');
+  }
 
   try {
     const blob = await toBlob(viewportElem, {
@@ -254,12 +278,21 @@ export const copyDiagramImageToClipboard = async (
       filter: (node: HTMLElement) => {
         if (!node || !node.classList) return true;
         const cl = node.classList;
-        return !(
+        if (
+          cl.contains('export-hide') ||
           cl.contains('react-flow__controls') ||
           cl.contains('react-flow__minimap') ||
           cl.contains('react-flow__panel') ||
-          cl.contains('react-flow__attribution')
-        );
+          cl.contains('react-flow__attribution') ||
+          cl.contains('react-flow__handle') ||
+          cl.contains('table-handle')
+        ) {
+          return false;
+        }
+        if (!showGroups && (cl.contains('group-node-container') || node.getAttribute('data-type') === 'groupNode')) {
+          return false;
+        }
+        return true;
       },
       style:
         cropMode === 'all'
@@ -282,6 +315,8 @@ export const copyDiagramImageToClipboard = async (
       }),
     ]);
   } finally {
+    document.body.classList.remove('export-clean-mode');
+    document.body.classList.remove('hide-groups');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }

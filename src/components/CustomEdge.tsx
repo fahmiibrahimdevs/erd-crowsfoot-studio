@@ -690,7 +690,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
 
       {/* Interactive Control Points / Waypoint Dots (Active when Hovered or Selected) */}
       {routingStyle === 'smoothstep' && isActive && (
-        <g className="transition-all duration-200">
+        <g className="transition-all duration-200 export-hide">
           {/* 1. Corner Control Dots (Move or Double-click to delete) */}
           {waypoints.map((p, idx) => {
             // Do not show for endpoints or port stubs
@@ -788,7 +788,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
                 edgeData?.onHoverRelation?.(null);
               }
             }}
-            className="transition-all duration-150 select-none animate-in fade-in zoom-in-95 duration-100"
+            className="transition-all duration-150 select-none animate-in fade-in zoom-in-95 duration-100 export-hide"
           >
             <div
               onClick={(e) => {
