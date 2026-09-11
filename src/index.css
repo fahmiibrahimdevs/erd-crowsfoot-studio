@@ -389,11 +389,11 @@
 }
 
 .swal2-container.swal2-backdrop-show {
-  background: rgba(2, 6, 23, 0.75) !important;
+  background: rgba(2, 6, 23, 0.55) !important;
 }
 
 html.light .swal2-container.swal2-backdrop-show {
-  background: rgba(15, 23, 42, 0.45) !important;
+  background: rgba(15, 23, 42, 0.25) !important;
 }
 
 .swal2-popup {
@@ -440,7 +440,6 @@ html.light .swal2-container.swal2-backdrop-show {
   font-weight: 500 !important;
   line-height: 1.4 !important;
   text-align: left !important;
-  display: flex !important;
   align-items: center !important;
   gap: 0.5rem !important;
   width: 100% !important;

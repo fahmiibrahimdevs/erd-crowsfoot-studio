@@ -1993,46 +1993,59 @@ export const App: React.FC = () => {
   );
 
   // Handle adding a brand new table
-  const handleAddTable = useCallback(() => {
-    const currentTables = tablesRef.current;
-    let idx = currentTables.length + 1;
-    while (currentTables.some((t) => t.name.toLowerCase() === `new_table_${idx}`)) {
-      idx++;
-    }
-    const color = TABLE_COLOR_PRESETS[(idx - 1) % TABLE_COLOR_PRESETS.length].value;
-    const newTable: TableData = {
-      id: `tbl-${Date.now().toString(36)}`,
-      name: `new_table_${idx}`,
-      colorTag: color,
-      columns: [
-        {
-          id: `col-id-${Date.now().toString(36)}`,
-          name: 'id',
-          type: 'SERIAL',
-          isPrimary: true,
-          isNullable: false,
-          isUnique: true,
-          isAutoIncrement: true,
-        },
-        {
-          id: `col-created-${Date.now().toString(36)}`,
-          name: 'created_at',
-          type: 'TIMESTAMPTZ',
-          isPrimary: false,
-          isNullable: false,
-          isUnique: false,
-          isAutoIncrement: false,
-          defaultValue: 'NOW()',
-        },
-      ],
-    };
+  const handleAddTable = useCallback(
+    (position?: { x: number; y: number }) => {
+      const currentTables = tablesRef.current;
+      let idx = currentTables.length + 1;
+      while (currentTables.some((t) => t.name.toLowerCase() === `new_table_${idx}`)) {
+        idx++;
+      }
+      const color = TABLE_COLOR_PRESETS[(idx - 1) % TABLE_COLOR_PRESETS.length].value;
+      const newTable: TableData = {
+        id: `tbl-${Date.now().toString(36)}`,
+        name: `new_table_${idx}`,
+        colorTag: color,
+        columns: [
+          {
+            id: `col-id-${Date.now().toString(36)}`,
+            name: 'id',
+            type: 'SERIAL',
+            isPrimary: true,
+            isNullable: false,
+            isUnique: true,
+            isAutoIncrement: true,
+          },
+          {
+            id: `col-created-${Date.now().toString(36)}`,
+            name: 'created_at',
+            type: 'TIMESTAMPTZ',
+            isPrimary: false,
+            isNullable: false,
+            isUnique: false,
+            isAutoIncrement: false,
+            defaultValue: 'NOW()',
+          },
+        ],
+      };
 
-    updateSchema((prev) => [...prev, newTable]);
-    setSelectedTableId(newTable.id);
-    setSelectedTableIds([newTable.id]);
-    setSelectedRelationId(null);
-    showToast(`Tabel "${newTable.name}" dibuat!`);
-  }, [updateSchema]);
+      const currentPositions = getNodePositions();
+      const defaultPos = position || {
+        x: (currentTables.length % 3) * 340 + 60,
+        y: Math.floor(currentTables.length / 3) * 360 + 60,
+      };
+      const newPositions = {
+        ...currentPositions,
+        [newTable.id]: defaultPos,
+      };
+
+      updateSchema((prev) => [...prev, newTable], undefined, newPositions);
+      setSelectedTableId(newTable.id);
+      setSelectedTableIds([newTable.id]);
+      setSelectedRelationId(null);
+      showToast(`Tabel "${newTable.name}" dibuat!`);
+    },
+    [getNodePositions, updateSchema]
+  );
 
   // Handle quick table primitive
   const handleAddQuickTable = useCallback(
@@ -3107,7 +3120,17 @@ export const App: React.FC = () => {
         onRenameGroup={handleRenameGroup}
         onRenameTable={handleRenameTable}
         onDeleteGroup={handleDeleteGroup}
-        onAddTable={handleAddTable}
+        onAddTable={() => {
+          if (rfInstanceRef.current && contextMenu.x && contextMenu.y) {
+            const flowPos = rfInstanceRef.current.screenToFlowPosition({
+              x: contextMenu.x,
+              y: contextMenu.y,
+            });
+            handleAddTable(flowPos);
+          } else {
+            handleAddTable();
+          }
+        }}
         onAutoLayout={handleAutoLayout}
         onOpenImportModal={() => setIsImportOpen(true)}
       />
