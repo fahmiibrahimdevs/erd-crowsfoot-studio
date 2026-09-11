@@ -473,10 +473,15 @@ export const App: React.FC = () => {
         return;
       }
 
+      let groupNum = currentGroups.length + 1;
+      while (currentGroups.some((g) => g.name.toLowerCase() === `group ${groupNum}`.toLowerCase())) {
+        groupNum++;
+      }
+
       const newGroupId = `grp-${Date.now().toString(36)}`;
       const newGroup: ErdGroup = {
         id: newGroupId,
-        name: `Group ${currentGroups.length + 1}`,
+        name: `Group ${groupNum}`,
         colorTag: '#38bdf8',
         tableIds: validIds,
       };
@@ -535,6 +540,17 @@ export const App: React.FC = () => {
           inputPlaceholder: 'Contoh: Modul Transaksi, Modul User, dll...',
           confirmText: 'Ya, Ubah',
           cancelText: 'Batal',
+          validate: (val) => {
+            const cleanVal = val.trim();
+            if (!cleanVal) return 'Nama grup tidak boleh kosong!';
+            const exists = currentGroups.some(
+              (g) => g.id !== groupId && g.name.toLowerCase() === cleanVal.toLowerCase()
+            );
+            if (exists) {
+              return `Nama grup "${cleanVal}" sudah digunakan oleh grup lain! Silakan gunakan nama lain.`;
+            }
+            return null;
+          },
         });
 
         if (!inputName) {
@@ -545,6 +561,15 @@ export const App: React.FC = () => {
 
       const clean = finalName.trim();
       if (!clean) return;
+      if (clean === target.name) return;
+
+      const isDuplicate = currentGroups.some(
+        (g) => g.id !== groupId && g.name.toLowerCase() === clean.toLowerCase()
+      );
+      if (isDuplicate) {
+        showToast(`Nama grup "${clean}" sudah digunakan oleh grup lain! Silakan gunakan nama lain.`, 'error');
+        return;
+      }
 
       updateSchema(
         (prev) => prev,
@@ -630,7 +655,7 @@ export const App: React.FC = () => {
               (t) => t.id !== tableId && t.name.toLowerCase() === cleanVal
             );
             if (exists) {
-              return `Nama tabel "${cleanVal}" sudah digunakan oleh tabel lain!`;
+              return `Nama tabel "${cleanVal}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`;
             }
             return null;
           },
@@ -643,7 +668,16 @@ export const App: React.FC = () => {
       }
 
       const clean = finalName.trim().toLowerCase().replace(/\s+/g, '_');
-      if (!clean || clean === target.name) return;
+      if (!clean) return;
+      if (clean === target.name) return;
+
+      const isDuplicate = currentTables.some(
+        (t) => t.id !== tableId && t.name.toLowerCase() === clean
+      );
+      if (isDuplicate) {
+        showToast(`Nama tabel "${clean}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`, 'error');
+        return;
+      }
 
       updateSchema(
         (prev) => prev.map((t) => (t.id === tableId ? { ...t, name: clean } : t)),
@@ -688,7 +722,16 @@ export const App: React.FC = () => {
 
       targets.forEach((tbl) => {
         const newId = `tbl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-        const newName = `${tbl.name}_copy`;
+        let counter = 1;
+        let candidateName = `${tbl.name}_copy`;
+        while (
+          currentTables.some((t) => t.name.toLowerCase() === candidateName.toLowerCase()) ||
+          duplicatedTables.some((t) => t.name.toLowerCase() === candidateName.toLowerCase())
+        ) {
+          counter++;
+          candidateName = `${tbl.name}_copy_${counter}`;
+        }
+        const newName = candidateName;
         const oldPos = currentPositions[tbl.id] || historyState.positions?.[tbl.id] || { x: 80, y: 80 };
         newPositions[newId] = { x: oldPos.x + 40, y: oldPos.y + 40 };
 
@@ -1951,11 +1994,15 @@ export const App: React.FC = () => {
 
   // Handle adding a brand new table
   const handleAddTable = useCallback(() => {
-    const tableCount = tables.length + 1;
-    const color = TABLE_COLOR_PRESETS[(tableCount - 1) % TABLE_COLOR_PRESETS.length].value;
+    const currentTables = tablesRef.current;
+    let idx = currentTables.length + 1;
+    while (currentTables.some((t) => t.name.toLowerCase() === `new_table_${idx}`)) {
+      idx++;
+    }
+    const color = TABLE_COLOR_PRESETS[(idx - 1) % TABLE_COLOR_PRESETS.length].value;
     const newTable: TableData = {
       id: `tbl-${Date.now().toString(36)}`,
-      name: `new_table_${tableCount}`,
+      name: `new_table_${idx}`,
       colorTag: color,
       columns: [
         {
@@ -1985,12 +2032,21 @@ export const App: React.FC = () => {
     setSelectedTableIds([newTable.id]);
     setSelectedRelationId(null);
     showToast(`Tabel "${newTable.name}" dibuat!`);
-  }, [tables.length, updateSchema]);
+  }, [updateSchema]);
 
   // Handle quick table primitive
   const handleAddQuickTable = useCallback(
     (templateName: string) => {
-      const id = `tbl-${templateName}-${Math.random().toString(36).substring(2, 6)}`;
+      const currentTables = tablesRef.current;
+      let counter = 1;
+      let candidateName = templateName;
+      while (currentTables.some((t) => t.name.toLowerCase() === candidateName.toLowerCase())) {
+        counter++;
+        candidateName = `${templateName}_${counter}`;
+      }
+      const finalTableName = candidateName;
+
+      const id = `tbl-${finalTableName}-${Math.random().toString(36).substring(2, 6)}`;
       let columns = [
         { id: `col-1`, name: 'id', type: 'SERIAL', isPrimary: true, isNullable: false, isUnique: true, isAutoIncrement: true },
       ];
@@ -2955,7 +3011,19 @@ export const App: React.FC = () => {
           }}
           onDeselectTable={handleDeselectTable}
           onUpdateTable={(updated) => {
-            updateSchema((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+            const currentTables = tablesRef.current;
+            const cleanName = updated.name.trim().toLowerCase().replace(/\s+/g, '_');
+            const target = currentTables.find((t) => t.id === updated.id);
+            if (target && target.name !== cleanName && cleanName) {
+              const isDuplicate = currentTables.some(
+                (t) => t.id !== updated.id && t.name.toLowerCase() === cleanName
+              );
+              if (isDuplicate) {
+                showToast(`Nama tabel "${cleanName}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`, 'error');
+                return;
+              }
+            }
+            updateSchema((prev) => prev.map((t) => (t.id === updated.id ? { ...updated, name: cleanName || updated.name } : t)));
           }}
           onDeleteTable={handleDeleteTable}
           onBatchDeleteTables={handleBatchDeleteTables}
