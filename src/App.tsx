@@ -33,7 +33,7 @@ import {
 import { PRESET_SCHEMAS, PresetSchema } from './utils/presets';
 import { getAutoLayoutedElements } from './utils/layout';
 import { generateSqlFromSchema } from './utils/sqlGenerator';
-import { showToast, confirmDialog } from './utils/alert';
+import { showToast, confirmDialog, promptDialog } from './utils/alert';
 import { useHistory } from './hooks/useHistory';
 import {
   Point,
@@ -519,24 +519,61 @@ export const App: React.FC = () => {
   );
 
   const handleRenameGroup = useCallback(
-    (groupId: string, newName: string) => {
+    async (groupId: string, newName?: string) => {
+      const currentGroups = groupsRef.current;
+      const target = currentGroups.find((g) => g.id === groupId);
+      if (!target) return;
+
+      let finalName = newName;
+
+      // Jika newName tidak dipassing (misal dari ContextMenu / action klik), minta input via SweetAlert2 prompt dialog
+      if (finalName === undefined) {
+        const inputName = await promptDialog({
+          title: 'Ganti Nama Grup',
+          text: 'Masukkan nama baru untuk grup modul ini:',
+          inputValue: target.name,
+          inputPlaceholder: 'Contoh: Modul Transaksi, Modul User, dll...',
+          confirmText: 'Ya, Ubah',
+          cancelText: 'Batal',
+        });
+
+        if (!inputName) {
+          return; // Pengguna menekan Batal
+        }
+        finalName = inputName;
+      }
+
+      const clean = finalName.trim();
+      if (!clean) return;
+
       updateSchema(
         (prev) => prev,
         (prev) => prev,
         undefined,
         (prevGroups) =>
-          (prevGroups || []).map((g) => (g.id === groupId ? { ...g, name: newName } : g))
+          (prevGroups || []).map((g) => (g.id === groupId ? { ...g, name: clean } : g))
       );
-      showToast(`Nama grup diubah menjadi "${newName}"`, 'success');
+      showToast(`Nama grup diubah menjadi "${clean}"`, 'success');
     },
     [updateSchema]
   );
 
   const handleDeleteGroup = useCallback(
-    (groupId: string) => {
+    async (groupId: string) => {
       const currentGroups = groupsRef.current;
       const target = currentGroups.find((g) => g.id === groupId);
       if (!target) return;
+
+      const confirmed = await confirmDialog({
+        title: 'Hapus Grup & Seluruh Tabel?',
+        text: `Apakah Anda yakin ingin menghapus grup "${target.name}" beserta ${target.tableIds.length} tabel di dalamnya?`,
+        confirmText: 'Ya, Hapus',
+        cancelText: 'Batal',
+        isDangerous: true,
+      });
+
+      if (!confirmed) return;
+
       const deletedSet = new Set(target.tableIds);
 
       updateSchema(

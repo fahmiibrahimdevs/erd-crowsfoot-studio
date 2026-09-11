@@ -106,3 +106,64 @@ export const confirmDialog = async (options: {
 
   return result.isConfirmed;
 };
+
+// Prompt / Input dialog preset (SweetAlert2)
+export const promptDialog = async (options: {
+  title: string;
+  text?: string;
+  inputValue?: string;
+  inputPlaceholder?: string;
+  confirmText?: string;
+  cancelText?: string;
+  validate?: (value: string) => string | null | Promise<string | null>;
+}): Promise<string | null> => {
+  const light = isLightMode();
+  const swalInstance = getStudioSwal();
+
+  const result = await swalInstance.fire({
+    title: options.title,
+    text: options.text,
+    input: 'text',
+    inputValue: options.inputValue || '',
+    inputPlaceholder: options.inputPlaceholder || 'Masukkan nama baru...',
+    showCancelButton: true,
+    confirmButtonText: options.confirmText || 'Ya, Ubah',
+    cancelButtonText: options.cancelText || 'Batal',
+    reverseButtons: true,
+    inputValidator: (value) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) {
+        return 'Nama tidak boleh kosong!';
+      }
+      if (options.validate) {
+        return options.validate(trimmed);
+      }
+      return null;
+    },
+    customClass: {
+      popup: light
+        ? '!border !border-slate-200 !rounded-2xl !shadow-2xl !bg-white/95 !backdrop-blur-md !p-6 font-sans'
+        : '!border !border-slate-800 !rounded-2xl !shadow-2xl !bg-slate-900/95 !backdrop-blur-md !p-6 font-sans',
+      title: light
+        ? '!text-slate-900 !text-base !font-bold'
+        : '!text-slate-100 !text-base !font-bold',
+      htmlContainer: light
+        ? '!text-slate-600 !text-xs !leading-relaxed'
+        : '!text-slate-300 !text-xs !leading-relaxed',
+      input: light
+        ? '!bg-slate-100 !border !border-slate-300 !text-slate-900 !rounded-xl !text-xs !p-2.5 !focus:ring-2 !focus:ring-sky-500 !focus:border-sky-500 font-sans !mx-auto !w-[90%]'
+        : '!bg-slate-950 !border !border-slate-800 !text-slate-100 !rounded-xl !text-xs !p-2.5 !focus:ring-2 !focus:ring-sky-500 !focus:border-sky-500 font-sans !mx-auto !w-[90%]',
+      confirmButton: light
+        ? 'px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-xs transition-all shadow-md shadow-sky-500/20 mx-1.5 cursor-pointer'
+        : 'px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs transition-all shadow-md shadow-sky-500/20 mx-1.5 cursor-pointer',
+      cancelButton: light
+        ? 'px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs border border-slate-300 transition-all mx-1.5 cursor-pointer'
+        : 'px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs border border-slate-700 transition-all mx-1.5 cursor-pointer',
+    },
+  });
+
+  if (result.isConfirmed && typeof result.value === 'string') {
+    return result.value.trim();
+  }
+  return null;
+};
