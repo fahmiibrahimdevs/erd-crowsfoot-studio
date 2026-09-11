@@ -176,8 +176,12 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
   const routingStyle = edgeData?.routingStyle ?? 'smoothstep';
   const obstacles = edgeData?.obstacles ?? [];
 
-  const sourcePoint: Point = { x: sourceX, y: sourceY };
-  const targetPoint: Point = { x: targetX, y: targetY };
+  // Calibrate exact table border anchor point (React Flow left handle returns outer left edge, offset by +4.5px to align flush with table border)
+  const anchorSourceX = sourcePosition === Position.Left ? sourceX + 4.5 : sourceX;
+  const anchorTargetX = targetPosition === Position.Left ? targetX + 4.5 : targetX;
+
+  const sourcePoint: Point = { x: anchorSourceX, y: sourceY };
+  const targetPoint: Point = { x: anchorTargetX, y: targetY };
 
   const sourceDir = sourcePosition === Position.Left ? -1 : 1;
   const targetDir = targetPosition === Position.Right ? 1 : -1;
@@ -269,10 +273,10 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
   if (routingStyle === 'bezier') {
     const curvature = 0.25 + laneIndex * 0.08;
     const [path, lx, ly] = getBezierPath({
-      sourceX,
+      sourceX: anchorSourceX,
       sourceY,
       sourcePosition,
-      targetX,
+      targetX: anchorTargetX,
       targetY,
       targetPosition,
       curvature,
@@ -282,9 +286,9 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
     labelY = ly;
   } else if (routingStyle === 'straight') {
     const [path, lx, ly] = getStraightPath({
-      sourceX,
+      sourceX: anchorSourceX,
       sourceY,
-      targetX,
+      targetX: anchorTargetX,
       targetY,
     });
     edgePath = path;
@@ -597,7 +601,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
       {/* Crow's Foot Endpoints */}
       <g className="pointer-events-none select-none transition-colors duration-150">
         {renderCrowsFoot(
-          sourceX,
+          anchorSourceX,
           sourceY,
           sourcePosition,
           sourceMarker,
@@ -605,7 +609,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
           activeWidth
         )}
         {renderCrowsFoot(
-          targetX,
+          anchorTargetX,
           targetY,
           targetPosition,
           targetMarker,
