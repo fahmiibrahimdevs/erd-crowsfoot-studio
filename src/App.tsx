@@ -13,6 +13,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
+import { ContextMenu } from './components/ContextMenu';
 import { SqlImportModal } from './components/Modals/SqlImportModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { TemplatesModal } from './components/Modals/TemplatesModal';
@@ -31,6 +32,7 @@ import {
 } from './types/schema';
 import { PRESET_SCHEMAS, PresetSchema } from './utils/presets';
 import { getAutoLayoutedElements } from './utils/layout';
+import { generateSqlFromSchema } from './utils/sqlGenerator';
 import { showToast, confirmDialog } from './utils/alert';
 import { useHistory } from './hooks/useHistory';
 import {
@@ -270,6 +272,29 @@ export const App: React.FC = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
   const [hoveredRelationId, setHoveredRelationId] = useState<string | null>(null);
+
+  const [lockedNodeIds, setLockedNodeIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('er_studio_locked_nodes');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [contextMenu, setContextMenu] = useState<{
+    isOpen: boolean;
+    x: number;
+    y: number;
+    targetType: 'canvas' | 'table' | 'group' | 'multi';
+    targetId: string | null;
+  }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    targetType: 'canvas',
+    targetId: null,
+  });
 
   const tablesRef = useRef(tables);
   tablesRef.current = tables;
@@ -544,6 +569,144 @@ export const App: React.FC = () => {
     [updateSchema]
   );
 
+  // Toggle Lock/Unlock position for tables or groups
+  const handleToggleLock = useCallback((nodeIds: string[]) => {
+    if (nodeIds.length === 0) return;
+    setLockedNodeIds((prev) => {
+      const allLocked = nodeIds.every((id) => prev.includes(id));
+      let next: string[];
+      if (allLocked) {
+        next = prev.filter((id) => !nodeIds.includes(id));
+        showToast(`Kunci posisi ${nodeIds.length} elemen telah dibuka (Unlocked)`, 'info');
+      } else {
+        const set = new Set([...prev, ...nodeIds]);
+        next = Array.from(set);
+        showToast(`Posisi ${nodeIds.length} elemen telah dikunci (Locked)`, 'info');
+      }
+      try {
+        localStorage.setItem('er_studio_locked_nodes', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Duplicate single or multiple tables
+  const handleDuplicateTables = useCallback(
+    (tableIds: string[]) => {
+      const currentTables = tablesRef.current;
+      const targets = currentTables.filter((t) => tableIds.includes(t.id));
+      if (targets.length === 0) return;
+
+      const currentPositions = getNodePositions();
+      const newPositions = { ...currentPositions };
+      const duplicatedTables: TableData[] = [];
+
+      targets.forEach((tbl) => {
+        const newId = `tbl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+        const newName = `${tbl.name}_copy`;
+        const oldPos = currentPositions[tbl.id] || historyState.positions?.[tbl.id] || { x: 80, y: 80 };
+        newPositions[newId] = { x: oldPos.x + 40, y: oldPos.y + 40 };
+
+        const newCols = tbl.columns.map((col) => {
+          const newColId = `col-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+          return { ...col, id: newColId };
+        });
+
+        duplicatedTables.push({
+          ...tbl,
+          id: newId,
+          name: newName,
+          columns: newCols,
+        });
+      });
+
+      updateSchema(
+        (prev) => [...prev, ...duplicatedTables],
+        (prev) => prev,
+        newPositions
+      );
+
+      const dupIds = duplicatedTables.map((t) => t.id);
+      setSelectedTableIds(dupIds);
+      if (dupIds.length === 1) {
+        setSelectedTableId(dupIds[0]);
+      }
+      showToast(`Berhasil menduplikasi ${duplicatedTables.length} tabel`, 'success');
+    },
+    [getNodePositions, historyState.positions, updateSchema]
+  );
+
+  // Copy SQL CREATE for single table
+  const handleCopySql = useCallback(
+    (tableId: string) => {
+      const tbl = tables.find((t) => t.id === tableId);
+      if (!tbl) return;
+      const rels = relations.filter(
+        (r) => r.sourceTableId === tableId || r.targetTableId === tableId
+      );
+      const sql = generateSqlFromSchema([tbl], rels, dialect);
+      navigator.clipboard.writeText(sql).then(() => {
+        showToast(`SQL CREATE untuk "${tbl.name}" disalin ke clipboard`, 'success');
+      });
+    },
+    [tables, relations, dialect]
+  );
+
+  // Right-click context menu handlers
+  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (node.type === 'groupNode') {
+      setSelectedGroupId(node.id);
+      setSelectedTableId(null);
+      setSelectedTableIds([]);
+      setSelectedRelationId(null);
+      setContextMenu({
+        isOpen: true,
+        x: event.clientX,
+        y: event.clientY,
+        targetType: 'group',
+        targetId: node.id,
+      });
+    } else {
+      const isPart =
+        selectedTableIdsRef.current.includes(node.id) &&
+        selectedTableIdsRef.current.length > 1;
+      if (isPart) {
+        setContextMenu({
+          isOpen: true,
+          x: event.clientX,
+          y: event.clientY,
+          targetType: 'multi',
+          targetId: node.id,
+        });
+      } else {
+        setSelectedTableId(node.id);
+        setSelectedTableIds([node.id]);
+        setSelectedGroupId(null);
+        setSelectedRelationId(null);
+        setContextMenu({
+          isOpen: true,
+          x: event.clientX,
+          y: event.clientY,
+          targetType: 'table',
+          targetId: node.id,
+        });
+      }
+    }
+  }, []);
+
+  const handlePaneContextMenu = useCallback((event: any) => {
+    event.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      x: event.clientX,
+      y: event.clientY,
+      targetType: 'canvas',
+      targetId: null,
+    });
+  }, []);
+
   const handleSelectionChange = useCallback((params: OnSelectionChangeParams) => {
     const currentTables = tablesRef.current;
     const currentGroups = groupsRef.current;
@@ -704,6 +867,19 @@ export const App: React.FC = () => {
 
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      // Lock / Unlock Shortcut (Ctrl+Shift+L)
+      if (isCmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        if (selectedGroupId) {
+          handleToggleLock([selectedGroupId]);
+        } else if (selectedTableIds.length > 0) {
+          handleToggleLock(selectedTableIds);
+        } else if (selectedTableId) {
+          handleToggleLock([selectedTableId]);
+        }
+        return;
+      }
 
       // Grouping Shortcuts (Ctrl+G to Group, Ctrl+Shift+G to Ungroup)
       if (isCmdOrCtrl && e.key.toLowerCase() === 'g') {
@@ -983,16 +1159,20 @@ export const App: React.FC = () => {
           selectedTableIdsRef.current.includes(table.id) ||
           selectedTableIdRef.current === table.id;
 
+        const isLocked = lockedNodeIds.includes(table.id);
+
         return {
           id: table.id,
           type: 'tableNode',
           position,
           selected: isSelected,
           zIndex: 10,
+          draggable: !isLocked,
           data: {
             table,
             foreignKeys,
             isSelected,
+            isLocked,
             onSelectTable: handleSelectTable,
             onDeleteTable: handleDeleteTable,
             onAddColumn: handleAddColumnToTable,
@@ -1123,13 +1303,15 @@ export const App: React.FC = () => {
         const isGroupSelected =
           (existingGroupNode?.selected ?? false) || selectedGroupIdRef.current === group.id;
 
+        const isGroupLocked = lockedNodeIds.includes(group.id);
+
         groupNodes.push({
           id: group.id,
           type: 'groupNode',
           position: { x: groupX, y: groupY },
           selected: isGroupSelected,
           zIndex: -1,
-          draggable: true,
+          draggable: !isGroupLocked,
           selectable: true,
           data: {
             group,
@@ -1137,6 +1319,7 @@ export const App: React.FC = () => {
             height: groupHeight,
             tableCount: memberTables.length,
             isSelected: isGroupSelected,
+            isLocked: isGroupLocked,
             onSelectGroup: handleSelectGroup,
             onUngroup: handleUngroup,
             onRenameGroup: handleRenameGroup,
@@ -1151,6 +1334,7 @@ export const App: React.FC = () => {
     tables,
     relations,
     groups,
+    lockedNodeIds,
     historyState.positions,
     handleSelectTable,
     handleSelectGroup,
@@ -2664,6 +2848,8 @@ export const App: React.FC = () => {
             onNodeDragStart={handleNodeDragStart}
             onNodeDrag={handleNodeDrag}
             onNodeDragStop={handleNodeDragStop}
+            onNodeContextMenu={handleNodeContextMenu}
+            onPaneContextMenu={handlePaneContextMenu}
           />
         </main>
 
@@ -2731,6 +2917,45 @@ export const App: React.FC = () => {
         isOpen={isTemplatesOpen}
         onClose={() => setIsTemplatesOpen(false)}
         onSelectPreset={handleSelectPreset}
+      />
+
+      {/* Canvas Right-Click Context Menu */}
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        targetType={contextMenu.targetType}
+        targetId={contextMenu.targetId}
+        selectedTableIds={selectedTableIds}
+        selectedGroupId={selectedGroupId}
+        tables={tables}
+        groups={groups}
+        lockedNodeIds={lockedNodeIds}
+        onClose={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+        onGroupSelection={() => {
+          if (selectedTableIds.length > 1) {
+            handleCreateGroup(selectedTableIds);
+          }
+        }}
+        onUngroup={handleUngroup}
+        onToggleLock={handleToggleLock}
+        onDuplicateTables={handleDuplicateTables}
+        onDeleteSelected={() => {
+          if (contextMenu.targetType === 'multi' && selectedTableIds.length > 1) {
+            handleBatchDeleteTables(selectedTableIds);
+          } else if (contextMenu.targetType === 'table' && contextMenu.targetId) {
+            handleDeleteTable(contextMenu.targetId);
+          } else if (selectedTableId) {
+            handleDeleteTable(selectedTableId);
+          }
+        }}
+        onAddColumn={handleAddColumnToTable}
+        onCopySql={handleCopySql}
+        onRenameGroup={handleRenameGroup}
+        onDeleteGroup={handleDeleteGroup}
+        onAddTable={handleAddTable}
+        onAutoLayout={handleAutoLayout}
+        onOpenImportModal={() => setIsImportOpen(true)}
       />
     </div>
   );

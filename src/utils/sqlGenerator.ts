@@ -25,6 +25,8 @@ export function generateSql(
   }
 }
 
+export const generateSqlFromSchema = generateSql;
+
 function mapTypeForPostgres(type: string): string {
   if (type.toUpperCase().startsWith('ENUM') || type.toUpperCase().startsWith('SET')) {
     return type;

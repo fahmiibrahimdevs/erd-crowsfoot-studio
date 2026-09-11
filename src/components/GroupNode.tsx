@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { NodeProps } from '@xyflow/react';
-import { Boxes, Unlock, Edit3, Check, Trash2 } from 'lucide-react';
+import { Boxes, Unlock, Edit3, Check, Trash2, Lock } from 'lucide-react';
 import { ErdGroup } from '../types/schema';
 import { confirmDialog } from '../utils/alert';
 
@@ -10,6 +10,7 @@ export interface GroupNodeData {
   height: number;
   tableCount: number;
   isSelected?: boolean;
+  isLocked?: boolean;
   onSelectGroup?: (groupId: string) => void;
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
@@ -115,6 +116,14 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
               <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
                 {tableCount} tabel
               </span>
+              {nodeData.isLocked && (
+                <span
+                  title="Posisi grup terkunci (Lock)"
+                  className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1 py-0.5 rounded text-[10px] shrink-0"
+                >
+                  <Lock className="w-2.5 h-2.5" />
+                </span>
+              )}
             </div>
           )}
 

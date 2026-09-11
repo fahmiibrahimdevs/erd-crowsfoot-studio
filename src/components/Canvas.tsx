@@ -34,6 +34,8 @@ interface CanvasProps {
   onNodeDrag?: (event: React.MouseEvent, node: Node) => void;
   onNodeDragStop?: (event: React.MouseEvent, node: Node) => void;
   onSelectionChange?: (params: OnSelectionChangeParams) => void;
+  onNodeContextMenu?: (event: React.MouseEvent, node: Node) => void;
+  onPaneContextMenu?: (event: any) => void;
   theme: 'dark' | 'light';
 }
 
@@ -64,6 +66,8 @@ export const Canvas: React.FC<CanvasProps> = ({
   onNodeDrag,
   onNodeDragStop,
   onSelectionChange,
+  onNodeContextMenu,
+  onPaneContextMenu,
   theme,
 }) => {
   const [canvasMode, setCanvasMode] = useState<'pan' | 'select'>('pan');
@@ -137,8 +141,8 @@ export const Canvas: React.FC<CanvasProps> = ({
 
           <button
             type="button"
-            title="Garis Langsung (Straight Line)"
             onClick={() => onChangeRoutingStyle('straight')}
+            title="Garis Langsung (Straight Line)"
             className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all cursor-pointer ${
               routingStyle === 'straight'
                 ? 'bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/40 shadow-xs font-semibold'
@@ -165,6 +169,8 @@ export const Canvas: React.FC<CanvasProps> = ({
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onSelectionChange={onSelectionChange}
+        onNodeContextMenu={onNodeContextMenu}
+        onPaneContextMenu={onPaneContextMenu}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
         fitView
