@@ -3253,6 +3253,9 @@ export const App: React.FC = () => {
         onClose={() => setIsExportOpen(false)}
         tables={tables}
         relations={relations}
+        groups={groups}
+        nodes={nodes}
+        edges={edges}
         currentDialect={dialect}
         projectName={projectName}
       />
