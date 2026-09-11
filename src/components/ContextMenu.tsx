@@ -68,8 +68,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as HTMLElement)) {
+    const handleGlobalPointerDown = (e: PointerEvent | MouseEvent) => {
+      // Tutup context menu jika pengguna mengklik di luar menu
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
@@ -81,23 +82,26 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
+      // Gunakan capture phase (true) agar event tertangkap meskipun child/canvas memanggil stopPropagation
+      window.addEventListener('pointerdown', handleGlobalPointerDown, true);
+      window.addEventListener('mousedown', handleGlobalPointerDown, true);
+      window.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('pointerdown', handleGlobalPointerDown, true);
+      window.removeEventListener('mousedown', handleGlobalPointerDown, true);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   // Viewport clamping to prevent context menu overflowing window
-  const menuWidth = 220;
+  const menuWidth = 260;
   const menuHeight = 280;
-  const clampedX = Math.min(x, window.innerWidth - menuWidth - 10);
-  const clampedY = Math.min(y, window.innerHeight - menuHeight - 10);
+  const clampedX = Math.max(12, Math.min(x, window.innerWidth - menuWidth - 16));
+  const clampedY = Math.max(12, Math.min(y, window.innerHeight - menuHeight - 16));
 
   // Relevant IDs for action
   const activeTableIds =
@@ -125,12 +129,12 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     <div
       ref={menuRef}
       style={{ top: clampedY, left: clampedX }}
-      className="fixed z-50 w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 transition-all text-slate-800 dark:text-slate-200 text-xs font-medium animate-in fade-in zoom-in-95 duration-100 select-none"
+      className="fixed z-50 min-w-[240px] max-w-[320px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 space-y-0.5 transition-all text-slate-800 dark:text-slate-200 text-xs font-medium animate-in fade-in zoom-in-95 duration-100 select-none"
     >
       {/* MULTI SELECTION CONTEXT */}
       {targetType === 'multi' && (
         <>
-          <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">
             {selectedTableIds.length} Tabel Terpilih
           </div>
 
@@ -140,13 +144,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onGroupSelection();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-sky-500" />
-              <span>Gabungkan Jadi Grup</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Layers className="w-4 h-4 shrink-0 text-sky-500" />
+              <span className="whitespace-nowrap font-medium text-xs">Gabungkan Jadi Grup</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+G
             </span>
           </button>
@@ -157,22 +161,22 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onToggleLock(activeTableIds);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               {isAllTargetLocked ? (
                 <>
-                  <Unlock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Buka Kunci (Unlock)</span>
+                  <Unlock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Buka Kunci (Unlock)</span>
                 </>
               ) : (
                 <>
-                  <Lock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Kunci Posisi (Lock)</span>
+                  <Lock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Kunci Posisi (Lock)</span>
                 </>
               )}
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+Shift+L
             </span>
           </button>
@@ -183,18 +187,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onDuplicateTables(activeTableIds);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Copy className="w-3.5 h-3.5 text-slate-400" />
-              <span>Duplikat Tabel</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Copy className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Duplikat Tabel</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+D
             </span>
           </button>
 
-          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 
           <button
             type="button"
@@ -202,13 +206,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onDeleteSelected();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus {selectedTableIds.length} Tabel</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Trash2 className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap font-medium text-xs">Hapus {selectedTableIds.length} Tabel</span>
             </div>
-            <span className="text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+            <span className="shrink-0 text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
               Del
             </span>
           </button>
@@ -218,7 +222,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       {/* SINGLE TABLE CONTEXT */}
       {targetType === 'table' && targetId && (
         <>
-          <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate">
+          <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate whitespace-nowrap">
             {tables.find((t) => t.id === targetId)?.name || 'Tabel'}
           </div>
 
@@ -228,13 +232,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onAddColumn(targetId);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Plus className="w-3.5 h-3.5 text-sky-500" />
-              <span>Tambah Kolom</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Plus className="w-4 h-4 shrink-0 text-sky-500" />
+              <span className="whitespace-nowrap font-medium text-xs">Tambah Kolom</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               +
             </span>
           </button>
@@ -245,22 +249,22 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onToggleLock([targetId]);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               {lockedNodeIds.includes(targetId) ? (
                 <>
-                  <Unlock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Buka Kunci (Unlock)</span>
+                  <Unlock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Buka Kunci (Unlock)</span>
                 </>
               ) : (
                 <>
-                  <Lock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Kunci Posisi (Lock)</span>
+                  <Lock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Kunci Posisi (Lock)</span>
                 </>
               )}
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+Shift+L
             </span>
           </button>
@@ -271,13 +275,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onDuplicateTables([targetId]);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Copy className="w-3.5 h-3.5 text-slate-400" />
-              <span>Duplikat Tabel</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Copy className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Duplikat Tabel</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+D
             </span>
           </button>
@@ -288,15 +292,15 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onCopySql(targetId);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Code2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>Salin SQL CREATE</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Code2 className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Salin SQL CREATE</span>
             </div>
           </button>
 
-          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 
           <button
             type="button"
@@ -304,13 +308,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onDeleteSelected();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Tabel</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Trash2 className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap font-medium text-xs">Hapus Tabel</span>
             </div>
-            <span className="text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+            <span className="shrink-0 text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
               Del
             </span>
           </button>
@@ -320,7 +324,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       {/* GROUP CONTEXT */}
       {targetType === 'group' && activeGroupId && (
         <>
-          <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate">
+          <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 truncate whitespace-nowrap">
             {groups.find((g) => g.id === activeGroupId)?.name || 'Grup Modul'}
           </div>
 
@@ -330,13 +334,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onUngroup(activeGroupId);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Ungroup className="w-3.5 h-3.5 text-sky-500" />
-              <span>Bubarkan Grup (Ungroup)</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Ungroup className="w-4 h-4 shrink-0 text-sky-500" />
+              <span className="whitespace-nowrap font-medium text-xs">Bubarkan Grup (Ungroup)</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+Shift+G
             </span>
           </button>
@@ -347,11 +351,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onRenameGroup(activeGroupId);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>Ganti Nama Grup</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Edit2 className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Ganti Nama Grup</span>
             </div>
           </button>
 
@@ -361,27 +365,27 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onToggleLock([activeGroupId]);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               {lockedNodeIds.includes(activeGroupId) ? (
                 <>
-                  <Unlock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Buka Kunci (Unlock)</span>
+                  <Unlock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Buka Kunci (Unlock)</span>
                 </>
               ) : (
                 <>
-                  <Lock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Kunci Grup (Lock)</span>
+                  <Lock className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span className="whitespace-nowrap font-medium text-xs">Kunci Grup (Lock)</span>
                 </>
               )}
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+Shift+L
             </span>
           </button>
 
-          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 
           <button
             type="button"
@@ -389,13 +393,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onDeleteGroup(activeGroupId);
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Grup & Isinya</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Trash2 className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap font-medium text-xs">Hapus Grup & Isinya</span>
             </div>
-            <span className="text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+            <span className="shrink-0 text-[10px] font-mono text-rose-500/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
               Del
             </span>
           </button>
@@ -405,7 +409,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       {/* BLANK CANVAS CONTEXT */}
       {targetType === 'canvas' && (
         <>
-          <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">
             Canvas Diagram
           </div>
 
@@ -415,11 +419,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onAddTable();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Plus className="w-3.5 h-3.5 text-sky-500" />
-              <span>Tambah Tabel Baru</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Plus className="w-4 h-4 shrink-0 text-sky-500" />
+              <span className="whitespace-nowrap font-medium text-xs">Tambah Tabel Baru</span>
             </div>
           </button>
 
@@ -429,18 +433,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onAutoLayout();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-sky-500" />
-              <span>Rapikan Otomatis (Auto-Layout)</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Sparkles className="w-4 h-4 shrink-0 text-sky-500" />
+              <span className="whitespace-nowrap font-medium text-xs">Rapikan Otomatis (Auto-Layout)</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+            <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+L
             </span>
           </button>
 
-          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 
           <button
             type="button"
@@ -448,11 +452,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onOpenImportModal();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-left"
           >
-            <div className="flex items-center gap-2">
-              <FileCode className="w-3.5 h-3.5 text-slate-400" />
-              <span>Import SQL DDL</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <FileCode className="w-4 h-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-xs">Import SQL DDL</span>
             </div>
           </button>
         </>
