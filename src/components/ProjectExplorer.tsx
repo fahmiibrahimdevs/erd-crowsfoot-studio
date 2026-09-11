@@ -16,6 +16,10 @@ import {
   ChevronDown,
   UploadCloud,
   Layers,
+  ExternalLink,
+  FolderTree,
+  ChevronsDown,
+  ChevronsRight,
 } from 'lucide-react';
 import { ErdTreeItem, ErdFileItem, ErdFolderItem, SqlDialect } from '../types/schema';
 import { confirmDialog, showToast } from '../utils/alert';
@@ -33,6 +37,14 @@ interface ProjectExplorerProps {
   onImportFile: (file: File, parentId?: string | null) => void;
   onMoveItem?: (itemId: string, targetParentId: string | null) => void;
   onToggleFolder?: (folderId: string) => void;
+}
+
+interface ContextMenuState {
+  isOpen: boolean;
+  x: number;
+  y: number;
+  targetType: 'file' | 'folder' | 'root';
+  targetItem: ErdTreeItem | null;
 }
 
 export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
@@ -59,6 +71,15 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   const [isCreatingNew, setIsCreatingNew] = useState<{ type: 'file' | 'folder'; parentId: string | null } | null>(null);
   const [newItemName, setNewItemName] = useState('');
 
+  // Right-Click Context Menu State
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    targetType: 'root',
+    targetItem: null,
+  });
+
   // Drag & drop state for moving files and folders
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
@@ -67,6 +88,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   const editInputRef = useRef<HTMLInputElement | null>(null);
   const createInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (editingItemId && editInputRef.current) {
@@ -82,17 +104,35 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     }
   }, [isCreatingNew]);
 
-  // Close popup menus when clicking outside
+  // Close context menu & popup menus on click outside or Escape
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (contextMenu.isOpen && (!contextMenuRef.current || !contextMenuRef.current.contains(target))) {
+        setContextMenu((prev) => ({ ...prev, isOpen: false }));
+      }
       if (!target.closest('.explorer-menu-container')) {
         setActiveMenuId(null);
       }
     };
-    window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
-  }, []);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setContextMenu((prev) => ({ ...prev, isOpen: false }));
+        setActiveMenuId(null);
+      }
+    };
+
+    window.addEventListener('click', handleGlobalClick);
+    window.addEventListener('contextmenu', handleGlobalClick);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('click', handleGlobalClick);
+      window.removeEventListener('contextmenu', handleGlobalClick);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [contextMenu.isOpen]);
 
   const toggleFolder = (folderId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -108,9 +148,21 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     onToggleFolder?.(folderId);
   };
 
-  const startRename = (item: ErdTreeItem, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleExpandAll = () => {
+    const allFolderIds = items.filter((i) => i.type === 'folder').map((i) => i.id);
+    setExpandedFolderIds(new Set(allFolderIds));
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedFolderIds(new Set());
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const startRename = (item: ErdTreeItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setActiveMenuId(null);
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
     setEditingItemId(item.id);
     setEditingName(item.name);
   };
@@ -127,6 +179,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   const handleStartCreate = (type: 'file' | 'folder', parentId: string | null = null, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setActiveMenuId(null);
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
     if (parentId) {
       setExpandedFolderIds((prev) => new Set([...prev, parentId]));
     }
@@ -149,9 +202,10 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     setNewItemName('');
   };
 
-  const handleDelete = async (item: ErdTreeItem, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = async (item: ErdTreeItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setActiveMenuId(null);
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
     const isFolder = item.type === 'folder';
     const confirmed = await confirmDialog({
       title: isFolder ? 'Hapus Folder?' : 'Hapus File ERD?',
@@ -174,6 +228,47 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
       onImportFile(file, isCreatingNew?.parentId || null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  // Open context menu for item (file/folder)
+  const handleItemContextMenu = (e: React.MouseEvent, type: 'file' | 'folder', item: ErdTreeItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(null);
+
+    // Calculate clamped screen position
+    const menuWidth = 200;
+    const menuHeight = type === 'file' ? 220 : 200;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+    setContextMenu({
+      isOpen: true,
+      x: Math.max(10, x),
+      y: Math.max(10, y),
+      targetType: type,
+      targetItem: item,
+    });
+  };
+
+  // Open context menu for blank/root area
+  const handleRootContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(null);
+
+    const menuWidth = 210;
+    const menuHeight = 220;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+    setContextMenu({
+      isOpen: true,
+      x: Math.max(10, x),
+      y: Math.max(10, y),
+      targetType: 'root',
+      targetItem: null,
+    });
   };
 
   // Group and sort items
@@ -207,6 +302,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
           {/* Folder Row */}
           <div
             draggable={!isEditing}
+            onContextMenu={(e) => handleItemContextMenu(e, 'folder', item)}
             onDragStart={(e) => {
               e.stopPropagation();
               e.dataTransfer.setData('text/plain', item.id);
@@ -251,8 +347,8 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                 ? 'opacity-40 cursor-grabbing bg-slate-200/50 dark:bg-slate-800/50'
                 : isDragOver
                 ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500 ring-2 ring-sky-500/40 shadow-sm scale-[1.01]'
-                : isMenuOpen
-                ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100'
+                : isMenuOpen || (contextMenu.isOpen && contextMenu.targetItem?.id === item.id)
+                ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/30'
                 : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -393,6 +489,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
       <div
         key={file.id}
         draggable={!isEditing}
+        onContextMenu={(e) => handleItemContextMenu(e, 'file', file)}
         onDragStart={(e) => {
           e.stopPropagation();
           e.dataTransfer.setData('text/plain', file.id);
@@ -411,8 +508,8 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
             ? 'opacity-40 cursor-grabbing bg-slate-200/50 dark:bg-slate-800/50'
             : isActive
             ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30 font-semibold shadow-xs'
-            : isMenuOpen
-            ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100'
+            : isMenuOpen || (contextMenu.isOpen && contextMenu.targetItem?.id === file.id)
+            ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 ring-1 ring-sky-500/30'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
         }`}
       >
@@ -522,7 +619,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full select-none">
+    <div className="flex flex-col h-full select-none relative">
       {/* Explorer Top Toolbar */}
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -581,6 +678,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
 
       {/* Tree Content */}
       <div
+        onContextMenu={handleRootContextMenu}
         onDragOver={(e) => {
           if (draggingItemId) {
             e.preventDefault();
@@ -688,6 +786,244 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
           Auto-saved
         </span>
       </div>
+
+      {/* =========================================================================
+         Floating Right-Click Context Menu (Matte Slate Studio Design System)
+         ========================================================================= */}
+      {contextMenu.isOpen && (
+        <div
+          ref={contextMenuRef}
+          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+          onClick={(e) => e.stopPropagation()}
+          className="fixed z-50 w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100 select-none font-sans"
+        >
+          {/* Target Title Header */}
+          {contextMenu.targetItem && (
+            <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2">
+              {contextMenu.targetType === 'folder' ? (
+                <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              ) : (
+                <FileCode2 className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+              )}
+              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
+                {contextMenu.targetItem.name}
+              </span>
+            </div>
+          )}
+
+          {/* Context Menu for FILE */}
+          {contextMenu.targetType === 'file' && contextMenu.targetItem && (
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (contextMenu.targetItem) {
+                    onSelectFile(contextMenu.targetItem.id);
+                  }
+                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-sky-500" />
+                <span>Buka Diagram</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    startRename(contextMenu.targetItem, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                <span>Ganti Nama (Rename)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (contextMenu.targetItem) {
+                    onDuplicateFile(contextMenu.targetItem.id);
+                  }
+                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                <span>Duplikat File</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (contextMenu.targetItem) {
+                    onExportFile(contextMenu.targetItem.id);
+                  }
+                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-400" />
+                <span>Download .erd File</span>
+              </button>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    handleDelete(contextMenu.targetItem, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus File</span>
+              </button>
+            </div>
+          )}
+
+          {/* Context Menu for FOLDER */}
+          {contextMenu.targetType === 'folder' && contextMenu.targetItem && (
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    handleStartCreate('file', contextMenu.targetItem.id, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <FilePlus className="w-3.5 h-3.5 text-sky-500" />
+                <span>File Baru di Folder Ini</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    handleStartCreate('folder', contextMenu.targetItem.id, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                <span>Subfolder Baru</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (contextMenu.targetItem) {
+                    toggleFolder(contextMenu.targetItem.id);
+                  }
+                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                {expandedFolderIds.has(contextMenu.targetItem.id) ? (
+                  <>
+                    <Folder className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Tutup Folder</span>
+                  </>
+                ) : (
+                  <>
+                    <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Buka Folder</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    startRename(contextMenu.targetItem, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                <span>Ganti Nama (Rename)</span>
+              </button>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (contextMenu.targetItem) {
+                    handleDelete(contextMenu.targetItem, e);
+                  }
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus Folder</span>
+              </button>
+            </div>
+          )}
+
+          {/* Context Menu for ROOT / BLANK AREA */}
+          {contextMenu.targetType === 'root' && (
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={(e) => handleStartCreate('file', null, e)}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <FilePlus className="w-3.5 h-3.5 text-sky-500" />
+                <span>Buat File ERD Baru</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => handleStartCreate('folder', null, e)}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                <span>Buat Folder Baru</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  fileInputRef.current?.click();
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Upload / Import .erd File</span>
+              </button>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+              <button
+                type="button"
+                onClick={handleExpandAll}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <ChevronsDown className="w-3.5 h-3.5 text-slate-400" />
+                <span>Buka Semua Folder</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCollapseAll}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <ChevronsRight className="w-3.5 h-3.5 text-slate-400" />
+                <span>Tutup Semua Folder</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
