@@ -62,6 +62,9 @@ const renderCrowsFoot = (
     const x1 = x + 6 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Horizontal stem seamlessly connecting to table border */}
+        <line x1={x} y1={y} x2={x1} y2={y} />
+        {/* Single vertical cardinality bar */}
         <line x1={x1} y1={y - barLen} x2={x1} y2={y + barLen} />
       </g>
     );
@@ -72,6 +75,9 @@ const renderCrowsFoot = (
     const x2 = x + 10 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Horizontal stem connecting through both bars to table border */}
+        <line x1={x} y1={y} x2={x2} y2={y} />
+        {/* Two vertical mandatory bars */}
         <line x1={x1} y1={y - barLen} x2={x1} y2={y + barLen} />
         <line x1={x2} y1={y - barLen} x2={x2} y2={y + barLen} />
       </g>
@@ -83,7 +89,11 @@ const renderCrowsFoot = (
     const cx = x + 12 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Horizontal stem connecting through circle and bar to table border */}
+        <line x1={x} y1={y} x2={cx + 3.2 * dir} y2={y} />
+        {/* Vertical bar */}
         <line x1={x1} y1={y - barLen} x2={x1} y2={y + barLen} />
+        {/* Optional circle */}
         <circle cx={cx} cy={y} r={3.2} className="fill-slate-50 dark:fill-slate-950" />
       </g>
     );
@@ -93,7 +103,9 @@ const renderCrowsFoot = (
     const xApex = x + 9 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Three crow's foot prongs (top diagonal, middle stem, bottom diagonal) attached flush to table border */}
         <line x1={x} y1={y - prongSpread} x2={xApex} y2={y} />
+        <line x1={x} y1={y} x2={xApex} y2={y} />
         <line x1={x} y1={y + prongSpread} x2={xApex} y2={y} />
       </g>
     );
@@ -103,8 +115,11 @@ const renderCrowsFoot = (
     const xApex = x + 9 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Three crow's foot prongs attached flush to table border */}
         <line x1={x} y1={y - prongSpread} x2={xApex} y2={y} />
+        <line x1={x} y1={y} x2={xApex} y2={y} />
         <line x1={x} y1={y + prongSpread} x2={xApex} y2={y} />
+        {/* Mandatory vertical bar */}
         <line x1={xApex} y1={y - barLen} x2={xApex} y2={y + barLen} />
       </g>
     );
@@ -112,11 +127,16 @@ const renderCrowsFoot = (
 
   if (marker === 'many-optional') {
     const xApex = x + 7 * dir;
-    const cx = x + 12 * dir;
+    const cx = x + 13 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
+        {/* Three crow's foot prongs attached flush to table border */}
         <line x1={x} y1={y - prongSpread} x2={xApex} y2={y} />
+        <line x1={x} y1={y} x2={xApex} y2={y} />
         <line x1={x} y1={y + prongSpread} x2={xApex} y2={y} />
+        {/* Horizontal stem to optional circle */}
+        <line x1={xApex} y1={y} x2={cx + 3.2 * dir} y2={y} />
+        {/* Optional circle */}
         <circle cx={cx} cy={y} r={3.2} className="fill-slate-50 dark:fill-slate-950" />
       </g>
     );
