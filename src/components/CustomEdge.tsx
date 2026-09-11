@@ -55,11 +55,11 @@ const renderCrowsFoot = (
   strokeWidth: number = 1.5
 ) => {
   const dir = pos === Position.Right ? 1 : -1;
-  const barLen = 7;
-  const prongSpread = 5.5;
+  const barLen = 7.5;
+  const prongSpread = 6;
 
   if (marker === 'one-simple') {
-    const x1 = x + 6 * dir;
+    const x1 = x + 7 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Horizontal stem seamlessly connecting to table border */}
@@ -71,13 +71,13 @@ const renderCrowsFoot = (
   }
 
   if (marker === 'one-mandatory') {
-    const x1 = x + 5 * dir;
-    const x2 = x + 10 * dir;
+    const x1 = x + 6 * dir;
+    const x2 = x + 12 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Horizontal stem connecting through both bars to table border */}
         <line x1={x} y1={y} x2={x2} y2={y} />
-        {/* Two vertical mandatory bars */}
+        {/* Two vertical mandatory bars with clean breathing room */}
         <line x1={x1} y1={y - barLen} x2={x1} y2={y + barLen} />
         <line x1={x2} y1={y - barLen} x2={x2} y2={y + barLen} />
       </g>
@@ -85,8 +85,8 @@ const renderCrowsFoot = (
   }
 
   if (marker === 'one-optional') {
-    const x1 = x + 5 * dir;
-    const cx = x + 12 * dir;
+    const x1 = x + 6 * dir;
+    const cx = x + 14 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Horizontal stem connecting through circle and bar to table border */}
@@ -100,7 +100,7 @@ const renderCrowsFoot = (
   }
 
   if (marker === 'many-simple') {
-    const xApex = x + 9 * dir;
+    const xApex = x + 11 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Three crow's foot prongs (top diagonal, middle stem, bottom diagonal) attached flush to table border */}
@@ -112,7 +112,7 @@ const renderCrowsFoot = (
   }
 
   if (marker === 'many-mandatory') {
-    const xApex = x + 9 * dir;
+    const xApex = x + 11 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Three crow's foot prongs attached flush to table border */}
@@ -126,8 +126,8 @@ const renderCrowsFoot = (
   }
 
   if (marker === 'many-optional') {
-    const xApex = x + 7 * dir;
-    const cx = x + 13 * dir;
+    const xApex = x + 9 * dir;
+    const cx = x + 16 * dir;
     return (
       <g stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
         {/* Three crow's foot prongs attached flush to table border */}
@@ -176,9 +176,9 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
   const routingStyle = edgeData?.routingStyle ?? 'smoothstep';
   const obstacles = edgeData?.obstacles ?? [];
 
-  // Calibrate exact table border anchor point (React Flow left handle returns outer left edge, offset by +4.5px to align flush with table border)
-  const anchorSourceX = sourcePosition === Position.Left ? sourceX + 4.5 : sourceX;
-  const anchorTargetX = targetPosition === Position.Left ? targetX + 4.5 : targetX;
+  // Calibrate exact table border anchor point for Left and Right ports
+  const anchorSourceX = sourcePosition === Position.Left ? sourceX + 2.5 : sourceX - 1.5;
+  const anchorTargetX = targetPosition === Position.Left ? targetX + 2.5 : targetX - 1.5;
 
   const sourcePoint: Point = { x: anchorSourceX, y: sourceY };
   const targetPoint: Point = { x: anchorTargetX, y: targetY };
