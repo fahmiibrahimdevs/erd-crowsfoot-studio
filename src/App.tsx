@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Node,
   Edge,
@@ -274,6 +274,38 @@ export const App: React.FC = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
   const [hoveredRelationId, setHoveredRelationId] = useState<string | null>(null);
+  const [selectedColumnHighlight, setSelectedColumnHighlight] = useState<{
+    tableId: string;
+    columnId: string;
+  } | null>(null);
+
+  // Compute all active relation IDs from selected column, relation, or hover state
+  const activeRelationIds = useMemo(() => {
+    const ids = new Set<string>();
+
+    if (selectedColumnHighlight) {
+      relations.forEach((r) => {
+        if (
+          (r.sourceTableId === selectedColumnHighlight.tableId &&
+            r.sourceColumnId === selectedColumnHighlight.columnId) ||
+          (r.targetTableId === selectedColumnHighlight.tableId &&
+            r.targetColumnId === selectedColumnHighlight.columnId)
+        ) {
+          ids.add(r.id);
+        }
+      });
+    }
+
+    if (selectedRelationId) {
+      ids.add(selectedRelationId);
+    }
+
+    if (hoveredRelationId) {
+      ids.add(hoveredRelationId);
+    }
+
+    return Array.from(ids);
+  }, [relations, selectedColumnHighlight, selectedRelationId, hoveredRelationId]);
 
   const [lockedNodeIds, setLockedNodeIds] = useState<string[]>(() => {
     try {
@@ -451,11 +483,13 @@ export const App: React.FC = () => {
       });
       setSelectedGroupId(null);
       setSelectedRelationId(null);
+      setSelectedColumnHighlight(null);
     } else {
       setSelectedTableId((prev) => (prev === tableId ? prev : tableId));
       setSelectedTableIds((prev) => (prev.length === 1 && prev[0] === tableId ? prev : [tableId]));
       setSelectedGroupId((prev) => (prev === null ? prev : null));
       setSelectedRelationId((prev) => (prev === null ? prev : null));
+      setSelectedColumnHighlight(null);
     }
   }, []);
 
@@ -464,6 +498,7 @@ export const App: React.FC = () => {
     setSelectedTableId((prev) => (prev === null ? prev : null));
     setSelectedTableIds((prev) => (prev.length === 0 ? prev : []));
     setSelectedRelationId((prev) => (prev === null ? prev : null));
+    setSelectedColumnHighlight(null);
   }, []);
 
   const handleCreateGroup = useCallback(
@@ -1266,32 +1301,36 @@ export const App: React.FC = () => {
 
   const handleClickColumn = useCallback(
     (tableId: string, colId: string) => {
+      // Toggle highlight state if clicking the same column
+      if (
+        selectedColumnHighlight?.tableId === tableId &&
+        selectedColumnHighlight?.columnId === colId
+      ) {
+        setSelectedColumnHighlight(null);
+        setSelectedRelationId(null);
+        setHoveredRelationId(null);
+        return;
+      }
+
       setSelectedTableId(tableId);
       setSelectedTableIds([tableId]);
       setSelectedGroupId(null);
+      setSelectedColumnHighlight({ tableId, columnId: colId });
 
-      const matchRel = relations.find(
+      const matchingRels = relations.filter(
         (r) =>
           (r.sourceTableId === tableId && r.sourceColumnId === colId) ||
           (r.targetTableId === tableId && r.targetColumnId === colId)
       );
 
-      if (!matchRel) {
-        setHoveredRelationId(null);
-        setSelectedRelationId(null);
-        return;
-      }
-
-      // Toggle highlight state if clicking the same column
-      if (selectedRelationId === matchRel.id || hoveredRelationId === matchRel.id) {
-        setHoveredRelationId(null);
-        setSelectedRelationId(null);
+      if (matchingRels.length > 0) {
+        setSelectedRelationId(matchingRels[0].id);
       } else {
-        setSelectedRelationId(matchRel.id);
-        setHoveredRelationId(matchRel.id);
+        setSelectedRelationId(null);
       }
+      setHoveredRelationId(null);
     },
-    [relations, selectedRelationId, hoveredRelationId]
+    [relations, selectedColumnHighlight]
   );
 
   const handleHoverColumn = useCallback(
@@ -1330,13 +1369,12 @@ export const App: React.FC = () => {
       }
 
       if (columnId) {
-        handleHoverColumn(tableId, columnId);
-        setTimeout(() => {
-          setHoveredRelationId(null);
-        }, 2500);
+        setSelectedColumnHighlight({ tableId, columnId });
+      } else {
+        setSelectedColumnHighlight(null);
       }
     },
-    [nodes, historyState.positions, handleHoverColumn]
+    [nodes, historyState.positions]
   );
 
   const handleFitView = useCallback(() => {
@@ -1380,16 +1418,25 @@ export const App: React.FC = () => {
           }
         });
 
-        // Collect highlighted column IDs for this table if connected to active relation
+        // Collect highlighted column IDs for this table
         const highlightedColIds: string[] = [];
-        if (activeRel) {
-          if (activeRel.sourceTableId === table.id) {
-            highlightedColIds.push(activeRel.sourceColumnId);
-          }
-          if (activeRel.targetTableId === table.id) {
-            highlightedColIds.push(activeRel.targetColumnId);
-          }
+
+        // If this table contains the user-selected column, highlight it directly
+        if (selectedColumnHighlight && selectedColumnHighlight.tableId === table.id) {
+          highlightedColIds.push(selectedColumnHighlight.columnId);
         }
+
+        // Add all columns that are endpoints of active relations
+        relations.forEach((r) => {
+          if (activeRelationIds.includes(r.id)) {
+            if (r.sourceTableId === table.id && !highlightedColIds.includes(r.sourceColumnId)) {
+              highlightedColIds.push(r.sourceColumnId);
+            }
+            if (r.targetTableId === table.id && !highlightedColIds.includes(r.targetColumnId)) {
+              highlightedColIds.push(r.targetColumnId);
+            }
+          }
+        });
 
         const isSelected =
           (existingNode?.selected ?? false) ||
@@ -1578,6 +1625,8 @@ export const App: React.FC = () => {
     historyState.positions,
     hoveredRelationId,
     selectedRelationId,
+    selectedColumnHighlight,
+    activeRelationIds,
     handleSelectTable,
     handleSelectGroup,
     handleDeleteTable,
@@ -1632,7 +1681,7 @@ export const App: React.FC = () => {
 
   // Synchronize React Flow edges with state
   useEffect(() => {
-    const isAnyActive = Boolean(hoveredRelationId || selectedRelationId || selectedTableId);
+    const hasActiveHighlight = activeRelationIds.length > 0;
 
     // Sync liveEdgeRegistry with active relationship IDs to prevent ghost hop segments
     const activeRelIds = new Set(relations.map((r) => r.id));
@@ -1824,12 +1873,10 @@ export const App: React.FC = () => {
 
       const isSelected = selectedRelationId === rel.id;
       const isHovered = hoveredRelationId === rel.id;
-      const isRelatedToSelectedTable =
-        selectedTableId &&
-        (rel.sourceTableId === selectedTableId || rel.targetTableId === selectedTableId);
+      const isColumnActive = activeRelationIds.includes(rel.id);
 
-      const isFocused = isSelected || isHovered || Boolean(isRelatedToSelectedTable);
-      const isDimmed = isAnyActive && !isFocused;
+      const isFocused = isSelected || isHovered || isColumnActive;
+      const isDimmed = hasActiveHighlight && !isFocused;
 
       return {
         id: rel.id,
@@ -1874,6 +1921,8 @@ export const App: React.FC = () => {
     selectedTableId,
     selectedTableIds,
     hoveredRelationId,
+    selectedColumnHighlight,
+    activeRelationIds,
     routingStyle,
     resolveRelationSides,
     handleHoverRelation,
@@ -3069,6 +3118,7 @@ export const App: React.FC = () => {
                 setSelectedTableId(null);
                 setSelectedTableIds([]);
                 setSelectedRelationId(null);
+                setSelectedColumnHighlight(null);
               } else {
                 const isMultiKey = event.ctrlKey || event.metaKey || event.shiftKey;
                 if (isMultiKey) {
@@ -3088,11 +3138,13 @@ export const App: React.FC = () => {
                   });
                   setSelectedGroupId(null);
                   setSelectedRelationId(null);
+                  setSelectedColumnHighlight(null);
                 } else {
                   setSelectedTableId(node.id);
                   setSelectedTableIds([node.id]);
                   setSelectedGroupId(null);
                   setSelectedRelationId(null);
+                  setSelectedColumnHighlight(null);
                 }
               }
             }}
@@ -3101,12 +3153,15 @@ export const App: React.FC = () => {
               setSelectedTableId(null);
               setSelectedTableIds([]);
               setSelectedGroupId(null);
+              setSelectedColumnHighlight(null);
             }}
             onPaneClick={() => {
               setSelectedTableId(null);
               setSelectedTableIds([]);
               setSelectedGroupId(null);
               setSelectedRelationId(null);
+              setSelectedColumnHighlight(null);
+              setHoveredRelationId(null);
             }}
             onSelectionChange={handleSelectionChange}
             onInitReactFlow={(instance) => {
