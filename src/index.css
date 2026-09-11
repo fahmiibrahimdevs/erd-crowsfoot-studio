@@ -1,0 +1,381 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@import "@xyflow/react/dist/style.css";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  html.dark, html:not(.light) {
+    background-color: #020617;
+    color: #f1f5f9;
+    color-scheme: dark;
+    caret-color: #38bdf8;
+  }
+
+  html.light {
+    background-color: #f8fafc;
+    color: #0f172a;
+    color-scheme: light;
+    caret-color: #0284c7;
+  }
+
+  input, textarea, [contenteditable] {
+    cursor: text;
+  }
+  .light input, .light textarea, .light [contenteditable] {
+    caret-color: #0284c7;
+    color-scheme: light;
+  }
+  .dark input, .dark textarea, .dark [contenteditable] {
+    caret-color: #38bdf8;
+    color-scheme: dark;
+  }
+
+  /* Selection styling */
+  .light ::selection {
+    background-color: rgba(14, 165, 233, 0.25);
+    color: #0f172a;
+  }
+  .dark ::selection {
+    background-color: rgba(56, 189, 248, 0.3);
+    color: #f8fafc;
+  }
+
+  /* High-Contrast Vector SVG Cursors */
+  html.light, html.light body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round' d='M4.5 3.5l6.5 16.5 3-5.5 5.5-3L4.5 3.5z'/%3E%3C/svg%3E") 4 4, default;
+  }
+  html.dark, html.dark body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24'%3E%3Cpath fill='%23f8fafc' stroke='%23020617' stroke-width='1.5' stroke-linejoin='round' d='M4.5 3.5l6.5 16.5 3-5.5 5.5-3L4.5 3.5z'/%3E%3C/svg%3E") 4 4, default;
+  }
+
+  /* Interactive Elements Cursor */
+  .light .cursor-pointer,
+  .light button,
+  .light [role="button"],
+  .light select {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round' d='M8 3a1.5 1.5 0 0 1 3 0v7.5a1 1 0 0 0 2 0V9a1.5 1.5 0 0 1 3 0v2a1 1 0 0 0 2 0v-1a1.5 1.5 0 0 1 3 0v5a7 7 0 0 1-7 7H11a7 7 0 0 1-7-7v-3.5a1.5 1.5 0 0 1 3 0V14a1 1 0 0 0 1-1V3z'/%3E%3C/svg%3E") 9 3, pointer !important;
+  }
+  .dark .cursor-pointer,
+  .dark button,
+  .dark [role="button"],
+  .dark select {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23f8fafc' stroke='%23020617' stroke-width='1.5' stroke-linejoin='round' d='M8 3a1.5 1.5 0 0 1 3 0v7.5a1 1 0 0 0 2 0V9a1.5 1.5 0 0 1 3 0v2a1 1 0 0 0 2 0v-1a1.5 1.5 0 0 1 3 0v5a7 7 0 0 1-7 7H11a7 7 0 0 1-7-7v-3.5a1.5 1.5 0 0 1 3 0V14a1 1 0 0 0 1-1V3z'/%3E%3C/svg%3E") 9 3, pointer !important;
+  }
+
+  /* Canvas Panning (Grab / Grabbing) */
+  .light .react-flow__pane,
+  .light .cursor-grab {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round' d='M18 11V6a2 2 0 0 0-4 0v4-2a2 2 0 0 0-4 0v2-3a2 2 0 0 0-4 0v8a7 7 0 0 0 14 0v-4a2 2 0 0 0-2-2z'/%3E%3C/svg%3E") 10 10, grab !important;
+  }
+  .dark .react-flow__pane,
+  .dark .cursor-grab {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23f8fafc' stroke='%23020617' stroke-width='1.5' stroke-linejoin='round' d='M18 11V6a2 2 0 0 0-4 0v4-2a2 2 0 0 0-4 0v2-3a2 2 0 0 0-4 0v8a7 7 0 0 0 14 0v-4a2 2 0 0 0-2-2z'/%3E%3C/svg%3E") 10 10, grab !important;
+  }
+
+  .light .react-flow__pane.dragging,
+  .light .react-flow__pane:active,
+  .light .cursor-grab:active,
+  .light .cursor-grabbing {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230284c7' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round' d='M17 11a2 2 0 0 0-2-2 2 2 0 0 0-2-1 2 2 0 0 0-3 1v1a2 2 0 0 0-4 0v7a6 6 0 0 0 12 0v-4a2 2 0 0 0-1-2z'/%3E%3C/svg%3E") 10 10, grabbing !important;
+  }
+  .dark .react-flow__pane.dragging,
+  .dark .react-flow__pane:active,
+  .dark .cursor-grab:active,
+  .dark .cursor-grabbing {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2338bdf8' stroke='%23020617' stroke-width='1.5' stroke-linejoin='round' d='M17 11a2 2 0 0 0-2-2 2 2 0 0 0-2-1 2 2 0 0 0-3 1v1a2 2 0 0 0-4 0v7a6 6 0 0 0 12 0v-4a2 2 0 0 0-1-2z'/%3E%3C/svg%3E") 10 10, grabbing !important;
+  }
+
+  /* Move / Drag Routing Handles */
+  .light .cursor-move {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round' d='M12 2l3 3h-2v4h4V7l3 3-3 3v-2h-4v4h2l-3 3-3-3h2v-4H7v2l-3-3 3-3v2h4V5H9l3-3z'/%3E%3C/svg%3E") 12 12, move !important;
+  }
+  .dark .cursor-move {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23f8fafc' stroke='%23020617' stroke-width='1.5' stroke-linejoin='round' d='M12 2l3 3h-2v4h4V7l3 3-3 3v-2h-4v4h2l-3 3-3-3h2v-4H7v2l-3-3 3-3v2h4V5H9l3-3z'/%3E%3C/svg%3E") 12 12, move !important;
+  }
+
+  /* Crosshair Port Handles */
+  .light .cursor-crosshair,
+  .light .table-handle {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='%230284c7' stroke-width='2'/%3E%3Cpath stroke='%230f172a' stroke-width='2' d='M12 2v6m0 8v6M2 12h6m8 0h6'/%3E%3C/svg%3E") 12 12, crosshair !important;
+  }
+  .dark .cursor-crosshair,
+  .dark .table-handle {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='%2338bdf8' stroke-width='2'/%3E%3Cpath stroke='%23ffffff' stroke-width='2' d='M12 2v6m0 8v6M2 12h6m8 0h6'/%3E%3C/svg%3E") 12 12, crosshair !important;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Custom smooth dark/light scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+  }
+  .light ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Subtle pattern textures */
+.dark .bg-dot-grid, html:not(.light) .bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.light .bg-dot-grid {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .bg-line-grid, html:not(.light) .bg-line-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.light .bg-line-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* React Flow Overrides for Studio Design */
+.dark .react-flow__pane, html:not(.light) .react-flow__pane {
+  background-color: #020617;
+}
+.light .react-flow__pane {
+  background-color: #f8fafc;
+}
+
+.dark .react-flow__controls, html:not(.light) .react-flow__controls {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+.light .react-flow__controls {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .react-flow__controls-button, html:not(.light) .react-flow__controls-button {
+  background: #0f172a !important;
+  border-bottom: 1px solid #1e293b !important;
+  color: #94a3b8 !important;
+  fill: #94a3b8 !important;
+  transition: all 0.15s ease;
+}
+.light .react-flow__controls-button {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  fill: #64748b !important;
+  transition: all 0.15s ease;
+}
+
+.dark .react-flow__controls-button:hover, html:not(.light) .react-flow__controls-button:hover {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  fill: #38bdf8 !important;
+}
+.light .react-flow__controls-button:hover {
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+  fill: #0284c7 !important;
+}
+
+.dark .react-flow__minimap, html:not(.light) .react-flow__minimap {
+  background-color: #090d16 !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+.light .react-flow__minimap {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .react-flow__minimap-mask, html:not(.light) .react-flow__minimap-mask {
+  fill: rgba(2, 6, 23, 0.7) !important;
+}
+.light .react-flow__minimap-mask {
+  fill: rgba(248, 250, 252, 0.7) !important;
+}
+
+.dark .react-flow__minimap-node, html:not(.light) .react-flow__minimap-node {
+  fill: #1e293b !important;
+  stroke: #38bdf8 !important;
+  stroke-width: 1px !important;
+}
+.light .react-flow__minimap-node {
+  fill: #f1f5f9 !important;
+  stroke: #0284c7 !important;
+  stroke-width: 1px !important;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2px !important;
+}
+
+/* Connection Line while dragging */
+.react-flow__connection-path {
+  stroke: #38bdf8 !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 4, 4;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 8;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Connection Handles: Preserving translateY(-50%) for perfect vertical centering */
+.table-handle {
+  width: 9px !important;
+  height: 9px !important;
+  background-color: #0f172a !important;
+  border: 1.5px solid #64748b !important;
+  border-radius: 50% !important;
+  z-index: 50 !important;
+  cursor: crosshair !important;
+  pointer-events: auto !important;
+  top: 50% !important;
+  opacity: 0 !important;
+  transform: translateY(-50%) scale(0.6) !important;
+  transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.light .table-handle {
+  background-color: #ffffff !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+/* Hitbox helper */
+.table-handle::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  cursor: crosshair;
+}
+
+/* Show handles when hovering the specific row */
+.group\/row:hover .table-handle {
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1) !important;
+}
+
+/* Show subtle handles when user is actively drawing a connection line anywhere on the canvas */
+.react-flow--connecting .table-handle {
+  opacity: 0.75 !important;
+  transform: translateY(-50%) scale(0.95) !important;
+  border-color: #38bdf8 !important;
+}
+
+/* Active Handle Hover Effect */
+.table-handle:hover,
+.table-handle.connecting,
+.react-flow__handle-connecting {
+  opacity: 1 !important;
+  border-color: #38bdf8 !important;
+  background-color: #38bdf8 !important;
+  transform: translateY(-50%) scale(1.35) !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7) !important;
+}
+
+.table-handle-pk {
+  border-color: #f59e0b !important;
+}
+
+.table-handle-pk:hover {
+  border-color: #fbbf24 !important;
+  background-color: #fbbf24 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7) !important;
+}
+
+.table-handle-fk {
+  border-color: #38bdf8 !important;
+}
+
+/* ==========================================================================
+   React Flow Area / Marquee Selection Box (Select Mode & Shift+Drag)
+   ========================================================================== */
+.dark .react-flow__selection, html:not(.light) .react-flow__selection {
+  border: 1.5px dashed #38bdf8 !important;
+  background-color: rgba(56, 189, 248, 0.12) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2) !important;
+  pointer-events: none !important;
+}
+
+.light .react-flow__selection {
+  border: 1.5px dashed #0284c7 !important;
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.2) !important;
+  pointer-events: none !important;
+}
+
+/* Multi-Nodes Selection Bounding Box Container */
+.dark .react-flow__nodesselection-rect, html:not(.light) .react-flow__nodesselection-rect {
+  border: 1.5px dashed rgba(56, 189, 248, 0.5) !important;
+  background-color: rgba(56, 189, 248, 0.03) !important;
+  border-radius: 12px !important;
+}
+
+.light .react-flow__nodesselection-rect {
+  border: 1.5px dashed rgba(2, 132, 199, 0.5) !important;
+  background-color: rgba(14, 165, 233, 0.03) !important;
+  border-radius: 12px !important;
+}
+
+/* Mode Select Cursor */
+.light .mode-select .react-flow__pane {
+  cursor: crosshair !important;
+}
+.dark .mode-select .react-flow__pane, html:not(.light) .mode-select .react-flow__pane {
+  cursor: crosshair !important;
+}
+
