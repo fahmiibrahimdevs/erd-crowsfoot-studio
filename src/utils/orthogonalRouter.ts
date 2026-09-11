@@ -401,7 +401,7 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
     targetTableId,
     laneIndex = 0,
     totalLanes = 1,
-    padding = 24,
+    padding = 36,
   } = options;
 
   const sourceDir = sourcePosition === Position.Left ? -1 : 1;
@@ -409,8 +409,9 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
 
   // Staggered distinct channel offsets so parallel exit lines never overlap
   const laneGap = 14;
-  const stub1 = padding + laneIndex * laneGap;
-  const stub2 = padding + (laneIndex % 3) * 8;
+  const minClearance = 36;
+  const stub1 = minClearance + laneIndex * laneGap;
+  const stub2 = minClearance + (laneIndex % 3) * 10;
   const laneOffset = (laneIndex - (totalLanes - 1) / 2) * 14;
 
   const relevantObstacles = obstacles.filter(
@@ -422,7 +423,7 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
 
   // Case 1: Same Side Left (Left-to-Left Bracket)
   if (sourcePosition === Position.Left && targetPosition === Position.Left) {
-    let commonX = Math.min(source.x, target.x) - padding - laneIndex * laneGap;
+    let commonX = Math.min(source.x, target.x) - minClearance - laneIndex * laneGap;
     // Check if any obstacle is on the left corridor
     const minY = Math.min(source.y, target.y);
     const maxY = Math.max(source.y, target.y);
@@ -431,7 +432,7 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
         const obsLeft = obs.x - 8;
         const obsRight = obs.x + obs.width + 8;
         if (commonX >= obsLeft && commonX <= obsRight) {
-          commonX = obsLeft - 16 - laneIndex * 8;
+          commonX = obsLeft - minClearance - laneIndex * 8;
         }
       }
     });
@@ -446,7 +447,7 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
 
   // Case 2: Same Side Right (Right-to-Right Bracket)
   if (sourcePosition === Position.Right && targetPosition === Position.Right) {
-    let commonX = Math.max(source.x, target.x) + padding + laneIndex * laneGap;
+    let commonX = Math.max(source.x, target.x) + minClearance + laneIndex * laneGap;
     // Check if any obstacle is on the right corridor
     const minY = Math.min(source.y, target.y);
     const maxY = Math.max(source.y, target.y);
@@ -455,7 +456,7 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
         const obsLeft = obs.x - 8;
         const obsRight = obs.x + obs.width + 8;
         if (commonX >= obsLeft && commonX <= obsRight) {
-          commonX = obsRight + 16 + laneIndex * 8;
+          commonX = obsRight + minClearance + laneIndex * 8;
         }
       }
     });
@@ -470,13 +471,14 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
 
   // Case 3: Forward Right-to-Left
   if (sourcePosition === Position.Right && targetPosition === Position.Left) {
-    const isForward = dx >= 8;
+    const isForward = dx >= 28;
     if (isForward) {
       if (Math.abs(dy) <= 8 && !isSegmentBlocked(source, target, relevantObstacles, 8)) {
         return [source, target];
       }
       const midX = (source.x + target.x) / 2 + laneOffset;
-      const bendX = Math.max(source.x + 6, Math.min(target.x - 6, midX));
+      const minStub = 30;
+      const bendX = Math.max(source.x + minStub, Math.min(target.x - minStub, midX));
       const pA: Point = { x: bendX, y: source.y };
       const pB: Point = { x: bendX, y: target.y };
 
@@ -486,13 +488,14 @@ export function computeSmartOrthogonalPath(options: RoutingOptions): Point[] {
 
   // Case 4: Forward Left-to-Right
   if (sourcePosition === Position.Left && targetPosition === Position.Right) {
-    const isForward = dx <= -8;
+    const isForward = dx <= -28;
     if (isForward) {
       if (Math.abs(dy) <= 8 && !isSegmentBlocked(source, target, relevantObstacles, 8)) {
         return [source, target];
       }
       const midX = (source.x + target.x) / 2 + laneOffset;
-      const bendX = Math.min(source.x - 6, Math.max(target.x + 6, midX));
+      const minStub = 30;
+      const bendX = Math.min(source.x - minStub, Math.max(target.x + minStub, midX));
       const pA: Point = { x: bendX, y: source.y };
       const pB: Point = { x: bendX, y: target.y };
 

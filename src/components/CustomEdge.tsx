@@ -596,6 +596,32 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
         )}
       </g>
 
+      {/* Invisible Hover Hitbox for Non-smoothstep edges */}
+      {routingStyle !== 'smoothstep' && (
+        <path
+          d={edgePath}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={20}
+          strokeLinecap="round"
+          className="cursor-pointer"
+          onMouseEnter={() => {
+            setIsHovered(true);
+            if (relation) edgeData?.onHoverRelation?.(relation.id);
+          }}
+          onMouseLeave={() => {
+            if (!dragState) {
+              setIsHovered(false);
+              edgeData?.onHoverRelation?.(null);
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (relation) edgeData?.onSelectRelation?.(relation.id);
+          }}
+        />
+      )}
+
       {/* Interactive Segment Drag Hitboxes */}
       {routingStyle === 'smoothstep' &&
         waypoints.map((p, idx) => {

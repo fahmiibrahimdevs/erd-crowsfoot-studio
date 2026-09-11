@@ -10,12 +10,14 @@ export interface TableNodeData {
   isSelected?: boolean;
   isLocked?: boolean;
   foreignKeys?: Record<string, string>; // colId -> "targetTable.targetCol"
+  highlightedColIds?: string[]; // colIds that are connected to active/hovered relation
   onSelectTable?: (tableId: string, event?: React.MouseEvent) => void;
   onDeleteTable?: (tableId: string) => void;
   onAddColumn?: (tableId: string) => void;
   onDeleteColumn?: (tableId: string, columnId: string) => void;
   onEditColumn?: (tableId: string, columnId: string) => void;
   onReorderColumns?: (tableId: string, columns: ColumnData[]) => void;
+  onHoverColumn?: (tableId: string | null, colId: string | null) => void;
 }
 
 export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
@@ -23,10 +25,12 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   const {
     table,
     foreignKeys = {},
+    highlightedColIds = [],
     onSelectTable,
     onDeleteTable,
     onAddColumn,
     onReorderColumns,
+    onHoverColumn,
   } = nodeData;
 
   const [expandedEnumColIds, setExpandedEnumColIds] = useState<Set<string>>(new Set());
@@ -202,10 +206,14 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
               ? 'border-b-2 !border-b-sky-400 bg-sky-500/10'
               : '';
 
+          const isColHighlighted = highlightedColIds.includes(col.id);
+
           return (
             <div
               key={col.id}
               draggable={true}
+              onMouseEnter={() => onHoverColumn?.(table.id, col.id)}
+              onMouseLeave={() => onHoverColumn?.(null, null)}
               onDragStart={(e) => handleDragStart(e, col.id)}
               onDragOver={(e) => handleDragOver(e, col.id)}
               onDragLeave={handleDragLeave}
@@ -216,7 +224,13 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
               }`}
             >
               {/* Column Header Row */}
-              <div className="relative px-2.5 h-8 flex items-center justify-between text-xs hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group/row">
+              <div
+                className={`relative px-2.5 h-8 flex items-center justify-between text-xs transition-all group/row ${
+                  isColHighlighted
+                    ? 'bg-sky-500/20 dark:bg-sky-500/25 ring-1 ring-sky-400/50 shadow-xs'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                }`}
+              >
                 {/* Left Port Handle */}
                 <Handle
                   type="source"
@@ -227,8 +241,8 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   isConnectableEnd={true}
                   title={`Port Kiri: Hubungkan relasi ke/dari ${table.name}.${col.name}`}
                   className={`table-handle nodrag nopan !left-[-4.5px] ${
-                    col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'
-                  }`}
+                    isColHighlighted ? '!ring-2 !ring-sky-400 !scale-125 !bg-sky-400' : ''
+                  } ${col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'}`}
                 />
 
                 {/* Left Grip Handle & Column Name */}
@@ -242,18 +256,34 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   </span>
 
                   {col.isPrimary ? (
-                    <Key className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                    <Key
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        isColHighlighted ? 'text-amber-400 drop-shadow-sm' : 'text-amber-500 dark:text-amber-400'
+                      }`}
+                    />
                   ) : foreignKeys[col.id] ? (
-                    <Link2 className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0" />
+                    <Link2
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        isColHighlighted ? 'text-sky-400 drop-shadow-sm' : 'text-sky-500 dark:text-sky-400'
+                      }`}
+                    />
                   ) : (
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600 shrink-0 mx-0.5" />
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 mx-0.5 ${
+                        isColHighlighted ? 'bg-sky-400 ring-1 ring-sky-400' : 'bg-slate-400 dark:bg-slate-600'
+                      }`}
+                    />
                   )}
 
                   {/* Primary Key (PK) Badge */}
                   {col.isPrimary && (
                     <span
                       title="Primary Key"
-                      className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 px-1 py-0.2 rounded shrink-0 shadow-xs"
+                      className={`text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 shadow-xs border ${
+                        isColHighlighted
+                          ? 'bg-amber-500/30 text-amber-200 border-amber-400 ring-1 ring-amber-400/40'
+                          : 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/40'
+                      }`}
                     >
                       PK
                     </span>
@@ -263,7 +293,11 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   {foreignKeys[col.id] && (
                     <span
                       title={`Foreign Key -> ${foreignKeys[col.id]}`}
-                      className="text-[9px] font-mono font-bold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/40 px-1 py-0.2 rounded shrink-0 shadow-xs"
+                      className={`text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 shadow-xs border ${
+                        isColHighlighted
+                          ? 'bg-sky-500/30 text-sky-200 border-sky-400 ring-1 ring-sky-400/40'
+                          : 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border-sky-500/40'
+                      }`}
                     >
                       FK
                     </span>
@@ -271,7 +305,9 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
 
                   <span
                     className={`truncate font-medium ${
-                      col.isPrimary
+                      isColHighlighted
+                        ? 'text-sky-600 dark:text-sky-200 font-semibold'
+                        : col.isPrimary
                         ? 'text-amber-600 dark:text-amber-300 font-semibold'
                         : foreignKeys[col.id]
                         ? 'text-sky-700 dark:text-sky-200'
@@ -335,8 +371,8 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   isConnectableEnd={true}
                   title={`Port Kanan: Hubungkan relasi ke/dari ${table.name}.${col.name}`}
                   className={`table-handle nodrag nopan !right-[-4.5px] ${
-                    col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'
-                  }`}
+                    isColHighlighted ? '!ring-2 !ring-sky-400 !scale-125 !bg-sky-400' : ''
+                  } ${col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'}`}
                 />
               </div>
 

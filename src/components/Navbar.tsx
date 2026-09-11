@@ -12,6 +12,7 @@ import {
   Redo2,
   Sun,
   Moon,
+  Search,
 } from 'lucide-react';
 import { SqlDialect } from '../types/schema';
 import { confirmDialog, showToast } from '../utils/alert';
@@ -26,6 +27,7 @@ interface NavbarProps {
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
   onOpenTemplatesModal: () => void;
+  onOpenCommandPalette: () => void;
   onClearCanvas: () => void;
   totalTables: number;
   canUndo: boolean;
@@ -46,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenImportModal,
   onOpenExportModal,
   onOpenTemplatesModal,
+  onOpenCommandPalette,
   onClearCanvas,
   totalTables,
   canUndo,
@@ -101,9 +104,25 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Middle Tools / Dialect Selector */}
-      <div className="hidden lg:flex items-center gap-2">
-        <div className="flex items-center bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
+      {/* Middle Tools / Search & Dialect Selector */}
+      <div className="flex items-center gap-2">
+        {/* Spotlight Command Palette Button */}
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-medium transition-all cursor-pointer shadow-xs group"
+          title="Buka Pencarian Cepat & Command Palette (Ctrl+K)"
+        >
+          <Search className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 group-hover:scale-110 transition-transform" />
+          <span className="hidden md:inline">Cari tabel, kolom, aksi...</span>
+          <span className="md:hidden">Cari</span>
+          <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700/80 rounded shadow-2xs">
+            Ctrl K
+          </kbd>
+        </button>
+
+        {/* Dialect Selector */}
+        <div className="hidden lg:flex items-center bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
           {(['postgres', 'mysql', 'sqlite', 'prisma'] as SqlDialect[]).map((d) => (
             <button
               key={d}

@@ -14,6 +14,7 @@ import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
 import { ContextMenu } from './components/ContextMenu';
+import { CommandPalette } from './components/CommandPalette';
 import { SqlImportModal } from './components/Modals/SqlImportModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { TemplatesModal } from './components/Modals/TemplatesModal';
@@ -344,6 +345,7 @@ export const App: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -982,7 +984,16 @@ export const App: React.FC = () => {
   // Global Keyboard Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+G, Ctrl+Shift+G, Delete, Backspace)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      // Spotlight Command Palette Shortcut (Ctrl+K / Cmd+K)
+      if (isCmdOrCtrl && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
       if (
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
@@ -992,9 +1003,6 @@ export const App: React.FC = () => {
       ) {
         return;
       }
-
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
 
       // Lock / Unlock Shortcut (Ctrl+Shift+L)
       if (isCmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'l') {
@@ -1251,8 +1259,67 @@ export const App: React.FC = () => {
     []
   );
 
+  const handleHoverRelation = useCallback((relId: string | null) => {
+    setHoveredRelationId(relId);
+  }, []);
+
+  const handleHoverColumn = useCallback(
+    (tableId: string | null, colId: string | null) => {
+      if (!tableId || !colId) {
+        setHoveredRelationId(null);
+        return;
+      }
+      const matchRel = relations.find(
+        (r) =>
+          (r.sourceTableId === tableId && r.sourceColumnId === colId) ||
+          (r.targetTableId === tableId && r.targetColumnId === colId)
+      );
+      setHoveredRelationId(matchRel ? matchRel.id : null);
+    },
+    [relations]
+  );
+
+  const handleNavigateToTable = useCallback(
+    (tableId: string, columnId?: string) => {
+      setSelectedTableId(tableId);
+      setSelectedTableIds([tableId]);
+      setSelectedGroupId(null);
+      setSelectedRelationId(null);
+
+      const node = nodes.find((n) => n.id === tableId);
+      const pos =
+        node?.position ||
+        historyState.positions?.[tableId] || { x: 100, y: 100 };
+
+      if (rfInstanceRef.current) {
+        rfInstanceRef.current.setCenter(pos.x + 140, pos.y + 100, {
+          zoom: 1.15,
+          duration: 600,
+        });
+      }
+
+      if (columnId) {
+        handleHoverColumn(tableId, columnId);
+        setTimeout(() => {
+          setHoveredRelationId(null);
+        }, 2500);
+      }
+    },
+    [nodes, historyState.positions, handleHoverColumn]
+  );
+
+  const handleFitView = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.fitView({ padding: 0.2, duration: 600 });
+    }
+  }, []);
+
   // Synchronize React Flow nodes with state (TableNodes & GroupNodes)
   useEffect(() => {
+    const activeRel = relations.find(
+      (r) => r.id === hoveredRelationId || r.id === selectedRelationId
+    );
+
     setNodes((existingNodes) => {
       const existingMap = new Map(existingNodes.map((n) => [n.id, n]));
       const savedPositions = historyState.positions || {};
@@ -1282,6 +1349,17 @@ export const App: React.FC = () => {
           }
         });
 
+        // Collect highlighted column IDs for this table if connected to active relation
+        const highlightedColIds: string[] = [];
+        if (activeRel) {
+          if (activeRel.sourceTableId === table.id) {
+            highlightedColIds.push(activeRel.sourceColumnId);
+          }
+          if (activeRel.targetTableId === table.id) {
+            highlightedColIds.push(activeRel.targetColumnId);
+          }
+        }
+
         const isSelected =
           (existingNode?.selected ?? false) ||
           selectedTableIdsRef.current.includes(table.id) ||
@@ -1299,12 +1377,14 @@ export const App: React.FC = () => {
           data: {
             table,
             foreignKeys,
+            highlightedColIds,
             isSelected,
             isLocked,
             onSelectTable: handleSelectTable,
             onDeleteTable: handleDeleteTable,
             onAddColumn: handleAddColumnToTable,
             onReorderColumns: handleReorderColumns,
+            onHoverColumn: handleHoverColumn,
           },
         };
       });
@@ -1464,11 +1544,14 @@ export const App: React.FC = () => {
     groups,
     lockedNodeIds,
     historyState.positions,
+    hoveredRelationId,
+    selectedRelationId,
     handleSelectTable,
     handleSelectGroup,
     handleDeleteTable,
     handleAddColumnToTable,
     handleReorderColumns,
+    handleHoverColumn,
     handleUngroup,
     handleRenameGroup,
     handleDeleteGroup,
@@ -1486,10 +1569,6 @@ export const App: React.FC = () => {
     },
     [updateSchema]
   );
-
-  const handleHoverRelation = useCallback((relId: string | null) => {
-    setHoveredRelationId(relId);
-  }, []);
 
   const handleSelectRelationFromEdge = useCallback((relId: string) => {
     setSelectedRelationId(relId);
@@ -2893,6 +2972,7 @@ export const App: React.FC = () => {
         onOpenImportModal={() => setIsImportOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
         onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onClearCanvas={handleClearCanvas}
         totalTables={tables.length}
         canUndo={canUndo}
@@ -3083,6 +3163,26 @@ export const App: React.FC = () => {
         isOpen={isTemplatesOpen}
         onClose={() => setIsTemplatesOpen(false)}
         onSelectPreset={handleSelectPreset}
+      />
+
+      {/* Spotlight Command Palette (Ctrl+K / Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        tables={tables}
+        onNavigateToTable={handleNavigateToTable}
+        onAddTable={handleAddTable}
+        onAutoLayout={handleAutoLayout}
+        onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
+        onOpenImportModal={() => setIsImportOpen(true)}
+        onOpenExportModal={() => setIsExportOpen(true)}
+        onFitView={handleFitView}
+        onClearCanvas={handleClearCanvas}
+        routingStyle={routingStyle}
+        onChangeRoutingStyle={handleRoutingStyleChange}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        dialect={dialect}
       />
 
       {/* Canvas Right-Click Context Menu */}
