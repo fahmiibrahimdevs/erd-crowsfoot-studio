@@ -11,7 +11,6 @@ export const getStudioSwal = () => {
     buttonsStyling: false,
     width: '26rem',
     customClass: {
-      container: '!backdrop-blur-sm',
       popup: light
         ? '!border !border-slate-200 !rounded-2xl !shadow-2xl !bg-white !p-6 font-sans'
         : '!border !border-slate-800 !rounded-2xl !shadow-2xl !bg-slate-900 !p-6 font-sans',
