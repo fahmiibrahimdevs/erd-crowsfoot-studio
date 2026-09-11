@@ -506,7 +506,6 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
       edgeData.onUpdateRelationPath(relation.id, {
         waypoints: finalPoints,
       });
-      showToast('Jalur kelokan relasi berhasil disimpan', 'info');
     }
   };
 

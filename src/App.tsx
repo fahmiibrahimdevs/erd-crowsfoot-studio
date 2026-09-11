@@ -18,6 +18,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { SqlImportModal } from './components/Modals/SqlImportModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { TemplatesModal } from './components/Modals/TemplatesModal';
+import { StudioToast } from './components/StudioToast';
 import {
   TableData,
   RelationshipData,
@@ -3266,6 +3267,9 @@ export const App: React.FC = () => {
         onAutoLayout={handleAutoLayout}
         onOpenImportModal={() => setIsImportOpen(true)}
       />
+
+      {/* Global Studio Toast Notifications (Native, Clean, Non-blocking) */}
+      <StudioToast />
     </div>
   );
 };

@@ -40,35 +40,53 @@ export const getStudioSwal = () => {
 
 export const StudioSwal = getStudioSwal();
 
-// Toast notification preset
-export const showToast = (title: string, icon: 'success' | 'info' | 'warning' | 'error' = 'success') => {
-  const light = isLightMode();
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'bottom-end',
-    showConfirmButton: false,
-    timer: 2500,
-    timerProgressBar: true,
-    background: light ? '#ffffff' : '#0f172a',
-    color: light ? '#0f172a' : '#f8fafc',
-    customClass: {
-      popup: light
-        ? '!border !border-slate-200 !rounded-xl !shadow-xl !bg-white/95 !backdrop-blur-md !px-4 !py-3 font-sans !m-4'
-        : '!border !border-slate-800 !rounded-xl !shadow-xl !bg-slate-900/95 !backdrop-blur-md !px-4 !py-3 font-sans !m-4',
-      title: light
-        ? '!text-slate-800 !text-xs !font-semibold'
-        : '!text-slate-200 !text-xs !font-semibold',
-    },
-    didOpen: (toast) => {
-      toast.addEventListener('mouseenter', Swal.stopTimer);
-      toast.addEventListener('mouseleave', Swal.resumeTimer);
-    },
-  });
+export interface ToastMessage {
+  id: string;
+  title: string;
+  type: 'success' | 'info' | 'warning' | 'error';
+  duration?: number;
+}
 
-  Toast.fire({
-    icon,
-    title,
-  });
+type ToastListener = (toasts: ToastMessage[]) => void;
+
+let activeToasts: ToastMessage[] = [];
+const listeners = new Set<ToastListener>();
+
+const notifyListeners = () => {
+  listeners.forEach((listener) => listener([...activeToasts]));
+};
+
+export const subscribeToasts = (listener: ToastListener) => {
+  listeners.add(listener);
+  listener([...activeToasts]);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+
+export const removeToast = (id: string) => {
+  activeToasts = activeToasts.filter((t) => t.id !== id);
+  notifyListeners();
+};
+
+// Toast notification preset (Native clean Studio toast, zero backdrop blur/overlay)
+export const showToast = (
+  title: string,
+  type: 'success' | 'info' | 'warning' | 'error' = 'success',
+  duration = 2500
+) => {
+  const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+  const newToast: ToastMessage = { id, title, type, duration };
+
+  // Limit max 3 active toasts
+  activeToasts = [...activeToasts.slice(-2), newToast];
+  notifyListeners();
+
+  if (duration > 0) {
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
+  }
 };
 
 // Confirmation dialog preset
