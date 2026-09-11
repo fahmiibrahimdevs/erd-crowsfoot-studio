@@ -176,9 +176,9 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
   const routingStyle = edgeData?.routingStyle ?? 'smoothstep';
   const obstacles = edgeData?.obstacles ?? [];
 
-  // Calibrate exact table border anchor point for Left and Right ports
-  const anchorSourceX = sourcePosition === Position.Left ? sourceX + 2.5 : sourceX - 1.5;
-  const anchorTargetX = targetPosition === Position.Left ? targetX + 2.5 : targetX - 1.5;
+  // Calibrate exact table border anchor point for Left (+2.5px) and Right (-4.5px) ports
+  const anchorSourceX = sourcePosition === Position.Left ? sourceX + 2.5 : sourceX - 4.5;
+  const anchorTargetX = targetPosition === Position.Left ? targetX + 2.5 : targetX - 4.5;
 
   const sourcePoint: Point = { x: anchorSourceX, y: sourceY };
   const targetPoint: Point = { x: anchorTargetX, y: targetY };
