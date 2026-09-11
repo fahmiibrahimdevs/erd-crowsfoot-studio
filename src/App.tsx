@@ -292,6 +292,9 @@ export const App: React.FC = () => {
     startTablePositions: Record<string, { x: number; y: number }>;
   } | null>(null);
 
+  const isDraggingRef = useRef(false);
+  const dragRafIdRef = useRef<number | null>(null);
+
   const [routingStyle, setRoutingStyle] = useState<EdgeRoutingStyle>(() => {
     try {
       return (localStorage.getItem(ROUTING_STYLE_KEY) as EdgeRoutingStyle) || 'smoothstep';
@@ -1228,6 +1231,7 @@ export const App: React.FC = () => {
 
     // 3. Pre-extract all horizontal segments for Electrical Line Jumps (Arc Hop Crossovers)
     const allHorizontalSegments: HorizontalSegment[] = [];
+    const waypointsMap = new Map<string, Point[]>();
     relations.forEach((rel) => {
       const sTable = tables.find((t) => t.id === rel.sourceTableId);
       const tTable = tables.find((t) => t.id === rel.targetTableId);
@@ -1270,7 +1274,11 @@ export const App: React.FC = () => {
       const sourcePosition = sIsLeft ? Position.Left : Position.Right;
       const targetPosition = tIsLeft ? Position.Left : Position.Right;
 
-      const relObstacles = isInternalEdge
+      // Fast-path bypass during active drag to maintain 60FPS fluid interactivity
+      const isDragging = isDraggingRef.current;
+      const relObstacles = isDragging
+        ? []
+        : isInternalEdge
         ? obstacles.filter((o) => selectedTableIds.includes(o.id))
         : obstacles;
 
@@ -1282,7 +1290,7 @@ export const App: React.FC = () => {
         pts[pts.length - 1] = { ...targetPoint };
         pts[pts.length - 2] = { x: pts[pts.length - 2].x, y: targetPoint.y };
         waypoints = cleanAndSimplifyWaypoints(pts);
-      } else if (isInternalEdge) {
+      } else if (isInternalEdge || isDragging) {
         const laneOffset = (laneIndex - (totalLanes - 1) / 2) * 14;
         if (
           (sourcePosition === Position.Right && targetPosition === Position.Left) ||
@@ -1338,6 +1346,7 @@ export const App: React.FC = () => {
         });
       }
 
+      waypointsMap.set(rel.id, waypoints);
       const segments = extractHorizontalSegments(rel.id, waypoints);
       allHorizontalSegments.push(...segments);
     });
@@ -1397,6 +1406,7 @@ export const App: React.FC = () => {
           isDimmed,
           isFocused,
           isInternalEdge,
+          precomputedWaypoints: waypointsMap.get(rel.id),
           obstacles: isInternalEdge
             ? obstacles.filter((o) => selectedTableIds.includes(o.id))
             : obstacles,
@@ -1830,9 +1840,10 @@ export const App: React.FC = () => {
     setSelectedRelationId(null);
   };
 
-  // Group & Node drag events for Realtime Synchronized Movement (Rigid Body)
+  // Group & Node drag events for Realtime Synchronized Movement (Rigid Body with 60FPS rAF Throttling)
   const handleNodeDragStart = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      isDraggingRef.current = true;
       const group = groupsRef.current.find((g) => g.id === node.id);
       if (group) {
         const currentPosMap = getNodePositions();
@@ -1862,30 +1873,43 @@ export const App: React.FC = () => {
         const deltaX = node.position.x - startGroupPos.x;
         const deltaY = node.position.y - startGroupPos.y;
 
-        // Move all member tables smoothly in real-time
-        setNodes((prevNodes) =>
-          prevNodes.map((n) => {
-            if (startTablePositions[n.id]) {
-              const init = startTablePositions[n.id];
-              return {
-                ...n,
-                position: {
-                  x: Math.round(init.x + deltaX),
-                  y: Math.round(init.y + deltaY),
-                },
-              };
-            }
-            return n;
-          })
-        );
+        // Frame-rate synchronized (60fps/120fps) node translation via requestAnimationFrame
+        if (dragRafIdRef.current !== null) {
+          cancelAnimationFrame(dragRafIdRef.current);
+        }
+
+        dragRafIdRef.current = requestAnimationFrame(() => {
+          dragRafIdRef.current = null;
+          setNodes((prevNodes) =>
+            prevNodes.map((n) => {
+              if (startTablePositions[n.id]) {
+                const init = startTablePositions[n.id];
+                return {
+                  ...n,
+                  position: {
+                    x: Math.round(init.x + deltaX),
+                    y: Math.round(init.y + deltaY),
+                  },
+                };
+              }
+              return n;
+            })
+          );
+        });
       }
     },
     [setNodes]
   );
 
-  // Node drag stop event - persist updated positions and shift waypoints
+  // Node drag stop event - persist updated positions, shift waypoints, and restore full precision routing
   const handleNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      if (dragRafIdRef.current !== null) {
+        cancelAnimationFrame(dragRafIdRef.current);
+        dragRafIdRef.current = null;
+      }
+      isDraggingRef.current = false;
+
       if (dragGroupStartRef.current && dragGroupStartRef.current.groupId === node.id) {
         const { startGroupPos, startTablePositions } = dragGroupStartRef.current;
         const deltaX = node.position.x - startGroupPos.x;

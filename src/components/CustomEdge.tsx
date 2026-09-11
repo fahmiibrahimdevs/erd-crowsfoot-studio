@@ -38,6 +38,7 @@ export interface CustomEdgeData {
   obstacles?: Rect[];
   allHorizontalSegments?: HorizontalSegment[];
   isInternalEdge?: boolean;
+  precomputedWaypoints?: Point[];
   onHoverRelation?: (relationId: string | null) => void;
   onDeleteRelation?: (relationId: string) => void;
   onSelectRelation?: (relationId: string) => void;
@@ -163,10 +164,12 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
 
   const isInternalEdge = edgeData?.isInternalEdge ?? false;
 
-  // Calculate Base Waypoints
+  // Calculate Base Waypoints (Prioritize precomputed waypoints from App to eliminate redundant calculation)
   let computedWaypoints: Point[];
   if (livePoints) {
     computedWaypoints = livePoints;
+  } else if (edgeData?.precomputedWaypoints && edgeData.precomputedWaypoints.length >= 2) {
+    computedWaypoints = edgeData.precomputedWaypoints;
   } else if (relation?.customPath?.waypoints && relation.customPath.waypoints.length >= 4) {
     const saved = relation.customPath.waypoints;
     const pts = saved.map((p) => ({ ...p }));
