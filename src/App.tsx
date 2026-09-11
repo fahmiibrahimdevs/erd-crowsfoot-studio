@@ -1030,13 +1030,21 @@ export const App: React.FC = () => {
         return;
       }
 
+      const target = e.target as HTMLElement | null;
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.closest('input') ||
-        target.closest('textarea')
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          Boolean(target.closest('input')) ||
+          Boolean(target.closest('textarea')) ||
+          Boolean(target.closest('[contenteditable="true"]')))
       ) {
+        return;
+      }
+
+      // If a modal dialog or command palette is open, don't execute canvas shortcuts
+      if (isImportOpen || isExportOpen || isTemplatesOpen || isCommandPaletteOpen) {
         return;
       }
 
@@ -1170,6 +1178,7 @@ export const App: React.FC = () => {
     handleCreateGroup,
     handleUngroup,
     handleDeleteGroup,
+    handleToggleLock,
     selectedGroupId,
     selectedRelationId,
     selectedTableId,
@@ -1180,6 +1189,7 @@ export const App: React.FC = () => {
     isImportOpen,
     isExportOpen,
     isTemplatesOpen,
+    isCommandPaletteOpen,
     updateSchema,
     handleDeleteTable,
   ]);
