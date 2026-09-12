@@ -375,7 +375,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onKeyDown={handleKeyDown}
       >
         {/* Search Header Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-800 bg-slate-950/60">
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-800 bg-slate-950/60 shrink-0">
           <Search className="w-5 h-5 text-sky-400 shrink-0" />
           <input
             ref={inputRef}
@@ -400,40 +400,60 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Filter Category Tabs */}
-        <div className="flex items-center gap-1 px-4 py-2 bg-slate-900/90 border-b border-slate-800/80 overflow-x-auto text-xs">
-          {(
-            [
-              { key: 'all', label: 'Semua' },
-              { key: 'tables', label: `Tabel (${tables.length})` },
-              {
-                key: 'columns',
-                label: `Kolom (${tables.reduce((acc, t) => acc + t.columns.length, 0)})`,
-              },
-              { key: 'commands', label: 'Perintah' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => {
-                setActiveCategory(tab.key);
-                setSelectedIndex(0);
-                inputRef.current?.focus();
-              }}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer whitespace-nowrap ${
-                activeCategory === tab.key
-                  ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-xs font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 overflow-x-auto shrink-0">
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800/80 w-fit">
+            {(
+              [
+                { key: 'all', label: 'Semua', count: allItems.length },
+                { key: 'tables', label: 'Tabel', count: tables.length },
+                {
+                  key: 'columns',
+                  label: 'Kolom',
+                  count: tables.reduce((acc, t) => acc + t.columns.length, 0),
+                },
+                {
+                  key: 'commands',
+                  label: 'Perintah',
+                  count: allItems.filter((i) => i.category === 'commands').length,
+                },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeCategory === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(tab.key);
+                    setSelectedIndex(0);
+                    inputRef.current?.focus();
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-xs font-semibold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono transition-colors ${
+                      isActive
+                        ? 'bg-sky-500/25 text-sky-300 font-bold'
+                        : 'bg-slate-800/80 text-slate-500'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Results List */}
         <div
           ref={listRef}
-          className="flex-1 overflow-y-auto p-2 divide-y divide-slate-800/40 space-y-1 focus:outline-none"
+          className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1.5 focus:outline-none"
           tabIndex={-1}
         >
           {filteredItems.length === 0 ? (
@@ -533,7 +553,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer Hotkey Legend */}
-        <div className="px-4 py-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <div className="px-4 py-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono shrink-0">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">
