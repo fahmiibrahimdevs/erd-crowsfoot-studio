@@ -1019,6 +1019,83 @@ export const App: React.FC = () => {
     [updateSchema]
   );
 
+  const handleNavigateToTable = useCallback(
+    (tableId: string, columnId?: string) => {
+      setSelectedTableId(tableId);
+      setSelectedTableIds([tableId]);
+      setSelectedGroupId(null);
+      setSelectedRelationId(null);
+
+      const node = nodes.find((n) => n.id === tableId);
+      const pos =
+        node?.position ||
+        historyState.positions?.[tableId] || { x: 100, y: 100 };
+
+      if (rfInstanceRef.current) {
+        rfInstanceRef.current.setCenter(pos.x + 140, pos.y + 100, {
+          zoom: 1.15,
+          duration: 600,
+        });
+      }
+
+      if (columnId) {
+        setSelectedColumnHighlight({ tableId, columnId });
+      } else {
+        setSelectedColumnHighlight(null);
+      }
+    },
+    [nodes, historyState.positions]
+  );
+
+  const handleFitView = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.fitView({ padding: 0.2, duration: 600 });
+    }
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.zoomIn({ duration: 300 });
+    }
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.zoomOut({ duration: 300 });
+    }
+  }, []);
+
+  const handleStartPresentation = useCallback(() => {
+    setIsPresentationMode(true);
+    setSelectedGroupId(null);
+    setSelectedRelationId(null);
+    if (tables.length > 0) {
+      const targetId = selectedTableId || tables[0].id;
+      handleNavigateToTable(targetId);
+    } else {
+      handleFitView();
+    }
+    showToast('Mode Presentasi Aktif (Tekan Esc untuk keluar, L untuk Laser)', 'info');
+  }, [tables, selectedTableId, handleNavigateToTable, handleFitView]);
+
+  const handleExitPresentation = useCallback(() => {
+    setIsPresentationMode(false);
+  }, []);
+
+  const handleNextTablePresentation = useCallback(() => {
+    if (tables.length === 0) return;
+    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
+    const nextIndex = (currentIndex + 1) % tables.length;
+    handleNavigateToTable(tables[nextIndex].id);
+  }, [tables, selectedTableId, handleNavigateToTable]);
+
+  const handlePrevTablePresentation = useCallback(() => {
+    if (tables.length === 0) return;
+    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
+    const prevIndex = (currentIndex - 1 + tables.length) % tables.length;
+    handleNavigateToTable(tables[prevIndex].id);
+  }, [tables, selectedTableId, handleNavigateToTable]);
+
   // Global Keyboard Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+G, Ctrl+Shift+G, Delete, Backspace)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1374,83 +1451,6 @@ export const App: React.FC = () => {
     },
     [relations]
   );
-
-  const handleNavigateToTable = useCallback(
-    (tableId: string, columnId?: string) => {
-      setSelectedTableId(tableId);
-      setSelectedTableIds([tableId]);
-      setSelectedGroupId(null);
-      setSelectedRelationId(null);
-
-      const node = nodes.find((n) => n.id === tableId);
-      const pos =
-        node?.position ||
-        historyState.positions?.[tableId] || { x: 100, y: 100 };
-
-      if (rfInstanceRef.current) {
-        rfInstanceRef.current.setCenter(pos.x + 140, pos.y + 100, {
-          zoom: 1.15,
-          duration: 600,
-        });
-      }
-
-      if (columnId) {
-        setSelectedColumnHighlight({ tableId, columnId });
-      } else {
-        setSelectedColumnHighlight(null);
-      }
-    },
-    [nodes, historyState.positions]
-  );
-
-  const handleFitView = useCallback(() => {
-    if (rfInstanceRef.current) {
-      rfInstanceRef.current.fitView({ padding: 0.2, duration: 600 });
-    }
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    if (rfInstanceRef.current) {
-      rfInstanceRef.current.zoomIn({ duration: 300 });
-    }
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    if (rfInstanceRef.current) {
-      rfInstanceRef.current.zoomOut({ duration: 300 });
-    }
-  }, []);
-
-  const handleStartPresentation = useCallback(() => {
-    setIsPresentationMode(true);
-    setSelectedGroupId(null);
-    setSelectedRelationId(null);
-    if (tables.length > 0) {
-      const targetId = selectedTableId || tables[0].id;
-      handleNavigateToTable(targetId);
-    } else {
-      handleFitView();
-    }
-    showToast('Mode Presentasi Aktif (Tekan Esc untuk keluar, L untuk Laser)', 'info');
-  }, [tables, selectedTableId, handleNavigateToTable, handleFitView]);
-
-  const handleExitPresentation = useCallback(() => {
-    setIsPresentationMode(false);
-  }, []);
-
-  const handleNextTablePresentation = useCallback(() => {
-    if (tables.length === 0) return;
-    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
-    const nextIndex = (currentIndex + 1) % tables.length;
-    handleNavigateToTable(tables[nextIndex].id);
-  }, [tables, selectedTableId, handleNavigateToTable]);
-
-  const handlePrevTablePresentation = useCallback(() => {
-    if (tables.length === 0) return;
-    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
-    const prevIndex = (currentIndex - 1 + tables.length) % tables.length;
-    handleNavigateToTable(tables[prevIndex].id);
-  }, [tables, selectedTableId, handleNavigateToTable]);
 
   // Synchronize React Flow nodes with state (TableNodes & GroupNodes)
   useEffect(() => {
