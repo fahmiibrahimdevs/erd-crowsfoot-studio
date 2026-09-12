@@ -9,6 +9,7 @@ export interface ImageExportOptions {
   pattern: 'dot-grid' | 'solid';
   cropMode: 'all' | 'viewport';
   showGroups?: boolean;
+  includeShadow?: boolean;
   padding?: number;
   filename?: string;
 }
@@ -152,6 +153,7 @@ export const generateDiagramImage = async (
     backgroundMode = 'current',
     cropMode = 'all',
     showGroups = true,
+    includeShadow = false,
     padding = 80,
     filename: customFilename,
   } = options;
@@ -169,6 +171,12 @@ export const generateDiagramImage = async (
   document.body.classList.add('export-clean-mode');
   if (!showGroups) {
     document.body.classList.add('hide-groups');
+  }
+  if (!includeShadow || backgroundMode === 'transparent') {
+    document.body.classList.add('export-no-shadow');
+  }
+  if (backgroundMode === 'transparent') {
+    document.body.classList.add('export-transparent-mode');
   }
 
   // Filter elements that shouldn't appear in clean exported images
@@ -233,6 +241,8 @@ export const generateDiagramImage = async (
     // Restore original styles & classes
     document.body.classList.remove('export-clean-mode');
     document.body.classList.remove('hide-groups');
+    document.body.classList.remove('export-no-shadow');
+    document.body.classList.remove('export-transparent-mode');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }
@@ -253,7 +263,14 @@ export const copyDiagramImageToClipboard = async (
     throw new Error('Gagal menemukan elemen kanvas diagram');
   }
 
-  const { scale = 2, backgroundMode = 'current', cropMode = 'all', showGroups = true, padding = 80 } = options;
+  const {
+    scale = 2,
+    backgroundMode = 'current',
+    cropMode = 'all',
+    showGroups = true,
+    includeShadow = false,
+    padding = 80,
+  } = options;
 
   const bounds = calculateDiagramBounds(nodes, edges, tables, groups, showGroups);
   const bgColor = resolveBackgroundColor(backgroundMode, 'png');
@@ -267,6 +284,12 @@ export const copyDiagramImageToClipboard = async (
   document.body.classList.add('export-clean-mode');
   if (!showGroups) {
     document.body.classList.add('hide-groups');
+  }
+  if (!includeShadow || backgroundMode === 'transparent') {
+    document.body.classList.add('export-no-shadow');
+  }
+  if (backgroundMode === 'transparent') {
+    document.body.classList.add('export-transparent-mode');
   }
 
   try {
@@ -317,6 +340,8 @@ export const copyDiagramImageToClipboard = async (
   } finally {
     document.body.classList.remove('export-clean-mode');
     document.body.classList.remove('hide-groups');
+    document.body.classList.remove('export-no-shadow');
+    document.body.classList.remove('export-transparent-mode');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }

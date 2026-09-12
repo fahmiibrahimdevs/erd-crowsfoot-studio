@@ -532,5 +532,61 @@ html.light .swal2-validation-message {
   box-shadow: none !important;
 }
 
+/* ==========================================================================
+   Zero Shadow & Zero Blur for Crisp Flat / Transparent Image Export
+   ========================================================================== */
+.export-no-shadow .table-node-container,
+.export-transparent-mode .table-node-container,
+.export-clean-mode.export-no-shadow .table-node-container,
+.export-clean-mode.export-transparent-mode .table-node-container {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.export-no-shadow .group-node-container,
+.export-transparent-mode .group-node-container,
+.export-clean-mode.export-no-shadow .group-node-container,
+.export-clean-mode.export-transparent-mode .group-node-container,
+.export-no-shadow .group-node-container *,
+.export-transparent-mode .group-node-container * {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure 100% opaque backgrounds on cards during transparent export to prevent muddy alpha smudges */
+.light.export-transparent-mode .table-node-container,
+.light .export-transparent-mode .table-node-container,
+body.export-transparent-mode .light .table-node-container,
+html.light .table-node-container {
+  /* Inherits light styles */
+}
+
+body.export-transparent-mode .table-node-container {
+  background-color: #0f172a !important;
+}
+
+html.light body.export-transparent-mode .table-node-container,
+.light.export-transparent-mode .table-node-container {
+  background-color: #ffffff !important;
+}
+
+body.export-transparent-mode .group-node-container > div > div {
+  background-color: #090d16 !important;
+}
+
+html.light body.export-transparent-mode .group-node-container > div > div,
+.light.export-transparent-mode .group-node-container > div > div {
+  background-color: #ffffff !important;
+}
+
+
 
 

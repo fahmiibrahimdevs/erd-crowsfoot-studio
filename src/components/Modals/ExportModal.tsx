@@ -61,6 +61,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [imageBgMode, setImageBgMode] = useState<'current' | 'dark' | 'light' | 'transparent'>('current');
   const [imageCropMode, setImageCropMode] = useState<'all' | 'viewport'>('all');
   const [showGroups, setShowGroups] = useState<boolean>(true);
+  const [includeShadow, setIncludeShadow] = useState<boolean>(false);
 
   // Calculate live bounds and estimated dimensions
   const bounds = useMemo(() => {
@@ -151,6 +152,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         pattern: 'solid',
         cropMode: imageCropMode,
         showGroups,
+        includeShadow: imageBgMode === 'transparent' ? false : includeShadow,
         padding: 80,
         filename: projectName || 'er-diagram',
       };
@@ -181,6 +183,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           pattern: 'solid',
           cropMode: imageCropMode,
           showGroups,
+          includeShadow: imageBgMode === 'transparent' ? false : includeShadow,
           padding: 80,
         },
         nodes,
@@ -426,6 +429,62 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{cm.desc}</div>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* 5. Efek Bayangan (Card Shadows) */}
+              <div className="space-y-2 col-span-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+                    Efek Bayangan Kartu (Card Shadow)
+                  </label>
+                  {imageBgMode === 'transparent' && (
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">
+                      Otomatis Flat (Bebas Halo Transparan)
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIncludeShadow(false)}
+                    className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer relative ${
+                      !includeShadow || imageBgMode === 'transparent'
+                        ? 'bg-slate-100 dark:bg-slate-800 border-sky-500/80 ring-1 ring-sky-500/30'
+                        : 'bg-white dark:bg-slate-950/70 border-slate-200 dark:border-slate-800 hover:border-sky-500/50'
+                    }`}
+                  >
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] flex items-center justify-between">
+                      <span>Flat & Bersih (Tanpa Shadow)</span>
+                      <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                        Crisp
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      Tepi tabel tegas & tajam 100%, tanpa halo abu-abu/hitam di latar transparan maupun solid.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={imageBgMode === 'transparent'}
+                    onClick={() => setIncludeShadow(true)}
+                    className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
+                      imageBgMode === 'transparent' ? 'opacity-40 cursor-not-allowed' : ''
+                    } ${
+                      includeShadow && imageBgMode !== 'transparent'
+                        ? 'bg-slate-100 dark:bg-slate-800 border-sky-500/80 ring-1 ring-sky-500/30'
+                        : 'bg-white dark:bg-slate-950/70 border-slate-200 dark:border-slate-800 hover:border-sky-500/50'
+                    }`}
+                  >
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
+                      Soft Elevation (Bayangan Halus)
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      Kedalaman 3D lembut pada tabel (hanya direkomendasikan untuk latar Dark/Light solid).
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
