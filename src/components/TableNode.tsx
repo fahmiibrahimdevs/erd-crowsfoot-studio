@@ -137,9 +137,9 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   return (
     <div
       onClick={(e) => onSelectTable?.(table.id, e)}
-      className={`group relative w-[280px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border transition-all duration-200 shadow-xl dark:shadow-2xl shadow-slate-200/80 dark:shadow-black/50 table-node-container ${
+      className={`group relative w-[280px] bg-white dark:bg-slate-900 rounded-xl border transition-all duration-200 table-node-container ${
         selected
-          ? 'border-sky-500/80 ring-2 ring-sky-500/30 shadow-sky-500/10'
+          ? 'border-sky-500/80 ring-2 ring-sky-500/30 shadow-md shadow-sky-500/10'
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >

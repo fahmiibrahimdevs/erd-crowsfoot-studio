@@ -65,14 +65,14 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
       }}
       className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 pointer-events-auto group-node-container ${
         selected
-          ? 'border-sky-500/80 bg-sky-500/5 ring-4 ring-sky-500/20 shadow-xl shadow-sky-500/10'
+          ? 'border-sky-500/80 bg-sky-500/5 ring-2 ring-sky-500/30'
           : 'border-slate-300 dark:border-slate-800/80 bg-slate-100/30 dark:bg-slate-900/20 hover:border-slate-400 dark:hover:border-slate-700'
       }`}
     >
       {/* Group Header Label Bar */}
       <div className="absolute top-2.5 left-3 z-10 flex items-center gap-2 max-w-[calc(100%-24px)]">
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-950/95 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md cursor-grab active:cursor-grabbing group/header"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing group/header shrink-0"
         >
           <div
             className="w-2.5 h-2.5 rounded-full shrink-0"

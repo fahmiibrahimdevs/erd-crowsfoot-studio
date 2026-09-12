@@ -132,6 +132,88 @@ export const resolveBackgroundColor = (
   return isLight ? '#ffffff' : '#020617';
 };
 
+interface StyleBackup {
+  element: HTMLElement;
+  boxShadow: string;
+  filter: string;
+  backdropFilter: string;
+  webkitBackdropFilter: string;
+  background: string;
+  backgroundColor: string;
+}
+
+/**
+ * Directly overrides computed DOM styles before html-to-image clones the viewport.
+ * This guarantees 100% that no computed shadow, blur, or translucent group backdrops
+ * leak into the captured raster/SVG canvas.
+ */
+const applyDirectExportStyles = (
+  viewportElem: HTMLElement,
+  options: { includeShadow: boolean; backgroundMode: string },
+  isDark: boolean
+): (() => void) => {
+  const { includeShadow, backgroundMode } = options;
+  const isTransparent = backgroundMode === 'transparent';
+  const shouldRemoveShadow = !includeShadow || isTransparent;
+
+  const backups: StyleBackup[] = [];
+
+  const allElements = viewportElem.querySelectorAll<HTMLElement>('*');
+  allElements.forEach((el) => {
+    const computed = window.getComputedStyle(el);
+    const hasShadow = computed.boxShadow !== 'none' || Boolean(el.style.boxShadow);
+    const hasFilter = computed.filter !== 'none' || Boolean(el.style.filter);
+    const hasBackdrop = (computed as any).backdropFilter !== 'none' || Boolean((el.style as any).backdropFilter);
+
+    const isTable = el.classList.contains('table-node-container');
+    const isGroup = el.classList.contains('group-node-container');
+    const isGroupHeader = el.classList.contains('group/header') || (el.parentElement?.classList.contains('group/header') ?? false);
+
+    if (hasShadow || hasFilter || hasBackdrop || isTable || isGroup || isGroupHeader) {
+      backups.push({
+        element: el,
+        boxShadow: el.style.boxShadow,
+        filter: el.style.filter,
+        backdropFilter: (el.style as any).backdropFilter || '',
+        webkitBackdropFilter: (el.style as any).webkitBackdropFilter || '',
+        background: el.style.background,
+        backgroundColor: el.style.backgroundColor,
+      });
+
+      if (shouldRemoveShadow) {
+        el.style.setProperty('box-shadow', 'none', 'important');
+        el.style.setProperty('-webkit-box-shadow', 'none', 'important');
+        el.style.setProperty('filter', 'none', 'important');
+        el.style.setProperty('-webkit-filter', 'none', 'important');
+        el.style.setProperty('backdrop-filter', 'none', 'important');
+        el.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+      }
+
+      if (isTransparent) {
+        if (isGroup) {
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('background-color', 'transparent', 'important');
+        } else if (isTable) {
+          el.style.setProperty('background-color', isDark ? '#0f172a' : '#ffffff', 'important');
+        } else if (isGroupHeader) {
+          el.style.setProperty('background-color', isDark ? '#020617' : '#ffffff', 'important');
+        }
+      }
+    }
+  });
+
+  return () => {
+    backups.forEach((b) => {
+      b.element.style.boxShadow = b.boxShadow;
+      b.element.style.filter = b.filter;
+      (b.element.style as any).backdropFilter = b.backdropFilter;
+      (b.element.style as any).webkitBackdropFilter = b.webkitBackdropFilter;
+      b.element.style.background = b.background;
+      b.element.style.backgroundColor = b.backgroundColor;
+    });
+  };
+};
+
 /**
  * Exports the diagram to high-resolution image data URL or Blob
  */
@@ -189,6 +271,9 @@ export const generateDiagramImage = async (
     document.body.classList.add('export-transparent-mode');
     viewportElem.classList.add('export-transparent-mode');
   }
+
+  // Directly override styles on DOM elements for complete shadow/blur removal
+  const restoreDirectStyles = applyDirectExportStyles(viewportElem, { includeShadow, backgroundMode }, isDark);
 
   // Filter elements that shouldn't appear in clean exported images
   const filterNode = (node: HTMLElement) => {
@@ -249,6 +334,9 @@ export const generateDiagramImage = async (
       filename,
     };
   } finally {
+    // Restore direct DOM inline styles
+    restoreDirectStyles();
+
     // Restore original styles & classes
     document.body.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode');
     viewportElem.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode', 'dark', 'light');
@@ -312,6 +400,8 @@ export const copyDiagramImageToClipboard = async (
     viewportElem.classList.add('export-transparent-mode');
   }
 
+  const restoreDirectStyles = applyDirectExportStyles(viewportElem, { includeShadow, backgroundMode }, isDark);
+
   try {
     const blob = await toBlob(viewportElem, {
       backgroundColor: bgColor,
@@ -358,6 +448,7 @@ export const copyDiagramImageToClipboard = async (
       }),
     ]);
   } finally {
+    restoreDirectStyles();
     document.body.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode');
     viewportElem.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode', 'dark', 'light');
     viewportElem.style.transform = originalTransform;
