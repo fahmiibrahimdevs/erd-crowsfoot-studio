@@ -19,6 +19,7 @@ import { SqlImportModal } from './components/Modals/SqlImportModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { TemplatesModal } from './components/Modals/TemplatesModal';
 import { StudioToast } from './components/StudioToast';
+import { PresentationToolbar } from './components/PresentationToolbar';
 import {
   TableData,
   RelationshipData,
@@ -278,6 +279,7 @@ export const App: React.FC = () => {
     tableId: string;
     columnId: string;
   } | null>(null);
+  const [isPresentationMode, setIsPresentationMode] = useState<boolean>(false);
 
   // Compute all active relation IDs from selected column, relation, or hover state
   const activeRelationIds = useMemo(() => {
@@ -1168,6 +1170,17 @@ export const App: React.FC = () => {
           return;
         }
       }
+
+      // Alt+P: Toggle Presentation Mode
+      if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        if (isPresentationMode) {
+          handleExitPresentation();
+        } else {
+          handleStartPresentation();
+        }
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -1192,6 +1205,9 @@ export const App: React.FC = () => {
     isCommandPaletteOpen,
     updateSchema,
     handleDeleteTable,
+    isPresentationMode,
+    handleStartPresentation,
+    handleExitPresentation,
   ]);
 
   // Auto-sync active file contents with current working state
@@ -1392,6 +1408,49 @@ export const App: React.FC = () => {
       rfInstanceRef.current.fitView({ padding: 0.2, duration: 600 });
     }
   }, []);
+
+  const handleZoomIn = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.zoomIn({ duration: 300 });
+    }
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    if (rfInstanceRef.current) {
+      rfInstanceRef.current.zoomOut({ duration: 300 });
+    }
+  }, []);
+
+  const handleStartPresentation = useCallback(() => {
+    setIsPresentationMode(true);
+    setSelectedGroupId(null);
+    setSelectedRelationId(null);
+    if (tables.length > 0) {
+      const targetId = selectedTableId || tables[0].id;
+      handleNavigateToTable(targetId);
+    } else {
+      handleFitView();
+    }
+    showToast('Mode Presentasi Aktif (Tekan Esc untuk keluar, L untuk Laser)', 'info');
+  }, [tables, selectedTableId, handleNavigateToTable, handleFitView]);
+
+  const handleExitPresentation = useCallback(() => {
+    setIsPresentationMode(false);
+  }, []);
+
+  const handleNextTablePresentation = useCallback(() => {
+    if (tables.length === 0) return;
+    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
+    const nextIndex = (currentIndex + 1) % tables.length;
+    handleNavigateToTable(tables[nextIndex].id);
+  }, [tables, selectedTableId, handleNavigateToTable]);
+
+  const handlePrevTablePresentation = useCallback(() => {
+    if (tables.length === 0) return;
+    const currentIndex = tables.findIndex((t) => t.id === selectedTableId);
+    const prevIndex = (currentIndex - 1 + tables.length) % tables.length;
+    handleNavigateToTable(tables[prevIndex].id);
+  }, [tables, selectedTableId, handleNavigateToTable]);
 
   // Synchronize React Flow nodes with state (TableNodes & GroupNodes)
   useEffect(() => {
@@ -3054,62 +3113,67 @@ export const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#020617] text-slate-800 dark:text-slate-100 select-none transition-colors">
       {/* Top Navigation Bar */}
-      <Navbar
-        projectName={projectName}
-        setProjectName={setProjectName}
-        dialect={dialect}
-        setDialect={setDialect}
-        onAddTable={handleAddTable}
-        onAutoLayout={handleAutoLayout}
-        onOpenImportModal={() => setIsImportOpen(true)}
-        onOpenExportModal={() => setIsExportOpen(true)}
-        onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
-        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-        onClearCanvas={handleClearCanvas}
-        totalTables={tables.length}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
-      />
+      {!isPresentationMode && (
+        <Navbar
+          projectName={projectName}
+          setProjectName={setProjectName}
+          dialect={dialect}
+          setDialect={setDialect}
+          onAddTable={handleAddTable}
+          onAutoLayout={handleAutoLayout}
+          onOpenImportModal={() => setIsImportOpen(true)}
+          onOpenExportModal={() => setIsExportOpen(true)}
+          onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          onClearCanvas={handleClearCanvas}
+          totalTables={tables.length}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onStartPresentation={handleStartPresentation}
+        />
+      )}
 
       {/* Main Studio Workspace */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* Left Sidebar (Explorer) */}
-        <Sidebar
-          tables={tables}
-          relations={relations}
-          selectedTableId={selectedTableId}
-          selectedRelationId={selectedRelationId}
-          onSelectTable={handleSelectTable}
-          onSelectRelation={(relId) => {
-            setSelectedRelationId(relId);
-            setSelectedTableId(null);
-            setSelectedGroupId(null);
-          }}
-          onDeleteRelation={(relId) => {
-            updateSchema(
-              (prev) => prev,
-              (prev) => prev.filter((r) => r.id !== relId)
-            );
-            setSelectedRelationId(null);
-          }}
-          onFocusTable={handleFocusTable}
-          onAddQuickTable={handleAddQuickTable}
-          workspaceItems={workspaceItems}
-          activeFileId={activeFileId}
-          onSelectFile={handleSelectFile}
-          onCreateFile={handleCreateFile}
-          onCreateFolder={handleCreateFolder}
-          onRenameWorkspaceItem={handleRenameWorkspaceItem}
-          onDeleteWorkspaceItem={handleDeleteWorkspaceItem}
-          onDuplicateFile={handleDuplicateFile}
-          onExportFile={handleExportWorkspaceFile}
-          onImportFile={handleImportWorkspaceFile}
-          onMoveWorkspaceItem={handleMoveWorkspaceItem}
-        />
+        {!isPresentationMode && (
+          <Sidebar
+            tables={tables}
+            relations={relations}
+            selectedTableId={selectedTableId}
+            selectedRelationId={selectedRelationId}
+            onSelectTable={handleSelectTable}
+            onSelectRelation={(relId) => {
+              setSelectedRelationId(relId);
+              setSelectedTableId(null);
+              setSelectedGroupId(null);
+            }}
+            onDeleteRelation={(relId) => {
+              updateSchema(
+                (prev) => prev,
+                (prev) => prev.filter((r) => r.id !== relId)
+              );
+              setSelectedRelationId(null);
+            }}
+            onFocusTable={handleFocusTable}
+            onAddQuickTable={handleAddQuickTable}
+            workspaceItems={workspaceItems}
+            activeFileId={activeFileId}
+            onSelectFile={handleSelectFile}
+            onCreateFile={handleCreateFile}
+            onCreateFolder={handleCreateFolder}
+            onRenameWorkspaceItem={handleRenameWorkspaceItem}
+            onDeleteWorkspaceItem={handleDeleteWorkspaceItem}
+            onDuplicateFile={handleDuplicateFile}
+            onExportFile={handleExportWorkspaceFile}
+            onImportFile={handleImportWorkspaceFile}
+            onMoveWorkspaceItem={handleMoveWorkspaceItem}
+          />
+        )}
 
         {/* Center Canvas */}
         <main className="flex-1 h-full relative">
@@ -3186,60 +3250,78 @@ export const App: React.FC = () => {
         </main>
 
         {/* Right Inspector */}
-        <Inspector
-          selectedTable={selectedTable}
-          selectedRelation={selectedRelation}
-          selectedTables={tables.filter((t) => selectedTableIds.includes(t.id))}
-          selectedGroup={selectedGroup}
-          tables={tables}
-          relations={relations}
-          dialect={dialect}
-          onClose={() => {
-            setSelectedTableId(null);
-            setSelectedTableIds([]);
-            setSelectedGroupId(null);
-            setSelectedRelationId(null);
-          }}
-          onDeselectTable={handleDeselectTable}
-          onUpdateTable={(updated) => {
-            const currentTables = tablesRef.current;
-            const cleanName = updated.name.trim().toLowerCase().replace(/\s+/g, '_');
-            const target = currentTables.find((t) => t.id === updated.id);
-            if (target && target.name !== cleanName && cleanName) {
-              const isDuplicate = currentTables.some(
-                (t) => t.id !== updated.id && t.name.toLowerCase() === cleanName
-              );
-              if (isDuplicate) {
-                showToast(`Nama tabel "${cleanName}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`, 'error');
-                return;
+        {!isPresentationMode && (
+          <Inspector
+            selectedTable={selectedTable}
+            selectedRelation={selectedRelation}
+            selectedTables={tables.filter((t) => selectedTableIds.includes(t.id))}
+            selectedGroup={selectedGroup}
+            tables={tables}
+            relations={relations}
+            dialect={dialect}
+            onClose={() => {
+              setSelectedTableId(null);
+              setSelectedTableIds([]);
+              setSelectedGroupId(null);
+              setSelectedRelationId(null);
+            }}
+            onDeselectTable={handleDeselectTable}
+            onUpdateTable={(updated) => {
+              const currentTables = tablesRef.current;
+              const cleanName = updated.name.trim().toLowerCase().replace(/\s+/g, '_');
+              const target = currentTables.find((t) => t.id === updated.id);
+              if (target && target.name !== cleanName && cleanName) {
+                const isDuplicate = currentTables.some(
+                  (t) => t.id !== updated.id && t.name.toLowerCase() === cleanName
+                );
+                if (isDuplicate) {
+                  showToast(`Nama tabel "${cleanName}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`, 'error');
+                  return;
+                }
               }
-            }
-            updateSchema((prev) => prev.map((t) => (t.id === updated.id ? { ...updated, name: cleanName || updated.name } : t)));
-          }}
-          onDeleteTable={handleDeleteTable}
-          onBatchDeleteTables={handleBatchDeleteTables}
-          onBatchUpdateColor={handleBatchUpdateColor}
-          onCreateGroup={handleCreateGroup}
-          onUngroup={handleUngroup}
-          onRenameGroup={handleRenameGroup}
-          onDeleteGroup={handleDeleteGroup}
-          onUpdateGroupColor={handleUpdateGroupColor}
-          onUpdateRelation={(updated) => {
-            updateSchema(
-              (prev) => prev,
-              (prev) => prev.map((r) => (r.id === updated.id ? updated : r))
-            );
-          }}
-          onDeleteRelation={(relId) => {
-            updateSchema(
-              (prev) => prev,
-              (prev) => prev.filter((r) => r.id !== relId)
-            );
-            setSelectedRelationId(null);
-          }}
-          onGenerateJunctionTable={handleGenerateJunctionTable}
-        />
+              updateSchema((prev) => prev.map((t) => (t.id === updated.id ? { ...updated, name: cleanName || updated.name } : t)));
+            }}
+            onDeleteTable={handleDeleteTable}
+            onBatchDeleteTables={handleBatchDeleteTables}
+            onBatchUpdateColor={handleBatchUpdateColor}
+            onCreateGroup={handleCreateGroup}
+            onUngroup={handleUngroup}
+            onRenameGroup={handleRenameGroup}
+            onDeleteGroup={handleDeleteGroup}
+            onUpdateGroupColor={handleUpdateGroupColor}
+            onUpdateRelation={(updated) => {
+              updateSchema(
+                (prev) => prev,
+                (prev) => prev.map((r) => (r.id === updated.id ? updated : r))
+              );
+            }}
+            onDeleteRelation={(relId) => {
+              updateSchema(
+                (prev) => prev,
+                (prev) => prev.filter((r) => r.id !== relId)
+              );
+              setSelectedRelationId(null);
+            }}
+            onGenerateJunctionTable={handleGenerateJunctionTable}
+          />
+        )}
       </div>
+
+      {/* Presentation Mode Floating Toolbar & Overlay */}
+      <PresentationToolbar
+        isOpen={isPresentationMode}
+        tables={tables}
+        selectedTableId={selectedTableId}
+        onSelectTable={handleNavigateToTable}
+        onNextTable={handleNextTablePresentation}
+        onPrevTable={handlePrevTablePresentation}
+        onFitView={handleFitView}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onExit={handleExitPresentation}
+        projectName={projectName}
+        dialect={dialect}
+      />
 
       {/* Modals */}
       <SqlImportModal
