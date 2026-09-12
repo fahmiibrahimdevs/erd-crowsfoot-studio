@@ -520,14 +520,21 @@ html.light .swal2-validation-message {
 }
 
 /* Ensure table container bottom corners are rounded cleanly when bottom add-row button is hidden */
-.export-clean-mode .table-node-container {
+.export-clean-mode .table-node-container,
+.react-flow__viewport.export-clean-mode .table-node-container {
   overflow: hidden !important;
+}
+
+.export-with-shadow .table-node-container,
+.react-flow__viewport.export-with-shadow .table-node-container {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Reset table focus rings to clean state during export */
 .export-clean-mode .ring-2,
-.export-clean-mode .ring-4 {
+.export-clean-mode .ring-4,
+.react-flow__viewport.export-clean-mode .ring-2,
+.react-flow__viewport.export-clean-mode .ring-4 {
   --tw-ring-shadow: none !important;
   box-shadow: none !important;
 }
@@ -535,10 +542,19 @@ html.light .swal2-validation-message {
 /* ==========================================================================
    Zero Shadow & Zero Blur for Crisp Flat / Transparent Image Export
    ========================================================================== */
-.export-no-shadow .table-node-container,
-.export-transparent-mode .table-node-container,
-.export-clean-mode.export-no-shadow .table-node-container,
-.export-clean-mode.export-transparent-mode .table-node-container {
+.export-no-shadow,
+.export-no-shadow *,
+.export-transparent-mode,
+.export-transparent-mode *,
+.react-flow__viewport.export-no-shadow,
+.react-flow__viewport.export-no-shadow *,
+.react-flow__viewport.export-transparent-mode,
+.react-flow__viewport.export-transparent-mode * {
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  --tw-inset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
   filter: none !important;
@@ -547,45 +563,42 @@ html.light .swal2-validation-message {
   -webkit-backdrop-filter: none !important;
 }
 
-.export-no-shadow .group-node-container,
+/* Transparent background for group bounding boxes during transparent export */
 .export-transparent-mode .group-node-container,
-.export-clean-mode.export-no-shadow .group-node-container,
-.export-clean-mode.export-transparent-mode .group-node-container,
-.export-no-shadow .group-node-container *,
-.export-transparent-mode .group-node-container * {
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  filter: none !important;
-  -webkit-filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+.react-flow__viewport.export-transparent-mode .group-node-container {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Ensure 100% opaque backgrounds on cards during transparent export to prevent muddy alpha smudges */
-.light.export-transparent-mode .table-node-container,
-.light .export-transparent-mode .table-node-container,
-body.export-transparent-mode .light .table-node-container,
-html.light .table-node-container {
-  /* Inherits light styles */
-}
-
-body.export-transparent-mode .table-node-container {
+/* Ensure 100% opaque backgrounds on cards during transparent export */
+.export-transparent-mode .table-node-container,
+.react-flow__viewport.export-transparent-mode .table-node-container {
   background-color: #0f172a !important;
 }
 
-html.light body.export-transparent-mode .table-node-container,
-.light.export-transparent-mode .table-node-container {
+.light.export-transparent-mode .table-node-container,
+.light .export-transparent-mode .table-node-container,
+.react-flow__viewport.light.export-transparent-mode .table-node-container,
+.react-flow__viewport.export-transparent-mode.light .table-node-container,
+html.light .export-transparent-mode .table-node-container {
   background-color: #ffffff !important;
 }
 
-body.export-transparent-mode .group-node-container > div > div {
-  background-color: #090d16 !important;
+.export-transparent-mode .group-node-container .group\/header,
+.export-transparent-mode .group-node-container > div > div,
+.react-flow__viewport.export-transparent-mode .group-node-container .group\/header,
+.react-flow__viewport.export-transparent-mode .group-node-container > div > div {
+  background-color: #020617 !important;
 }
 
-html.light body.export-transparent-mode .group-node-container > div > div,
-.light.export-transparent-mode .group-node-container > div > div {
+.light.export-transparent-mode .group-node-container .group\/header,
+.light.export-transparent-mode .group-node-container > div > div,
+.react-flow__viewport.light.export-transparent-mode .group-node-container .group\/header,
+.react-flow__viewport.export-transparent-mode.light .group-node-container > div > div,
+html.light .export-transparent-mode .group-node-container > div > div {
   background-color: #ffffff !important;
 }
+
 
 
 

@@ -107,13 +107,13 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           ) : (
             <div
               onDoubleClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 cursor-pointer nodrag"
+              className="flex items-center gap-1.5 cursor-pointer nodrag shrink-0 whitespace-nowrap"
               title="Klik 2x untuk ubah nama grup"
             >
-              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 tracking-tight truncate max-w-[180px]">
+              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 tracking-tight truncate max-w-[180px] whitespace-nowrap shrink-0">
                 {group.name}
               </span>
-              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 whitespace-nowrap shrink-0">
                 {tableCount} tabel
               </span>
               {nodeData.isLocked && (

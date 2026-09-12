@@ -167,16 +167,27 @@ export const generateDiagramImage = async (
   const originalTransform = viewportElem.style.transform;
   const originalTransformOrigin = viewportElem.style.transformOrigin;
 
-  // Activate clean export class on DOM
+  const isDark = document.documentElement.classList.contains('dark') || !document.documentElement.classList.contains('light');
+  const themeClass = isDark ? 'dark' : 'light';
+
+  // Activate clean export classes on DOM and directly on the cloned viewport element
   document.body.classList.add('export-clean-mode');
+  viewportElem.classList.add('export-clean-mode', themeClass);
+
   if (!showGroups) {
     document.body.classList.add('hide-groups');
+    viewportElem.classList.add('hide-groups');
   }
   if (!includeShadow || backgroundMode === 'transparent') {
     document.body.classList.add('export-no-shadow');
+    viewportElem.classList.add('export-no-shadow');
+  } else {
+    document.body.classList.add('export-with-shadow');
+    viewportElem.classList.add('export-with-shadow');
   }
   if (backgroundMode === 'transparent') {
     document.body.classList.add('export-transparent-mode');
+    viewportElem.classList.add('export-transparent-mode');
   }
 
   // Filter elements that shouldn't appear in clean exported images
@@ -239,10 +250,8 @@ export const generateDiagramImage = async (
     };
   } finally {
     // Restore original styles & classes
-    document.body.classList.remove('export-clean-mode');
-    document.body.classList.remove('hide-groups');
-    document.body.classList.remove('export-no-shadow');
-    document.body.classList.remove('export-transparent-mode');
+    document.body.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode');
+    viewportElem.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode', 'dark', 'light');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }
@@ -281,15 +290,26 @@ export const copyDiagramImageToClipboard = async (
   const originalTransform = viewportElem.style.transform;
   const originalTransformOrigin = viewportElem.style.transformOrigin;
 
+  const isDark = document.documentElement.classList.contains('dark') || !document.documentElement.classList.contains('light');
+  const themeClass = isDark ? 'dark' : 'light';
+
   document.body.classList.add('export-clean-mode');
+  viewportElem.classList.add('export-clean-mode', themeClass);
+
   if (!showGroups) {
     document.body.classList.add('hide-groups');
+    viewportElem.classList.add('hide-groups');
   }
   if (!includeShadow || backgroundMode === 'transparent') {
     document.body.classList.add('export-no-shadow');
+    viewportElem.classList.add('export-no-shadow');
+  } else {
+    document.body.classList.add('export-with-shadow');
+    viewportElem.classList.add('export-with-shadow');
   }
   if (backgroundMode === 'transparent') {
     document.body.classList.add('export-transparent-mode');
+    viewportElem.classList.add('export-transparent-mode');
   }
 
   try {
@@ -338,10 +358,8 @@ export const copyDiagramImageToClipboard = async (
       }),
     ]);
   } finally {
-    document.body.classList.remove('export-clean-mode');
-    document.body.classList.remove('hide-groups');
-    document.body.classList.remove('export-no-shadow');
-    document.body.classList.remove('export-transparent-mode');
+    document.body.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode');
+    viewportElem.classList.remove('export-clean-mode', 'hide-groups', 'export-no-shadow', 'export-with-shadow', 'export-transparent-mode', 'dark', 'light');
     viewportElem.style.transform = originalTransform;
     viewportElem.style.transformOrigin = originalTransformOrigin;
   }
