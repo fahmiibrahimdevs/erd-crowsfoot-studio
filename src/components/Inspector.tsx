@@ -29,6 +29,7 @@ import {
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
   Wand2,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   TableData,
@@ -68,6 +69,7 @@ interface InspectorProps {
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onTidyOverlaps?: (tableIds?: string[]) => void;
+  onSortColumns?: (tableId?: string) => void;
   onCreateGroup?: (tableIds: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
@@ -97,6 +99,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onAlignTables,
   onDistributeTables,
   onTidyOverlaps,
+  onSortColumns,
   onCreateGroup,
   onUngroup,
   onRenameGroup,
@@ -521,6 +524,21 @@ export const Inspector: React.FC<InspectorProps> = ({
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span>Rapikan Tabrakan Seleksi (Tidy)</span>
+                </button>
+              </div>
+            )}
+
+            {/* Smart Column Sorting for Selected Tables */}
+            {onSortColumns && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => onSortColumns()}
+                  className="w-full py-2 px-2.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-sky-500/80 hover:text-sky-600 dark:hover:text-sky-400 hover:ring-1 hover:ring-sky-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                  title="Rapikan urutan kolom pada semua tabel terpilih (PK → FK → Atribut → Timestamps)"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Rapikan Kolom ({selectedTables.length} Tabel)</span>
                 </button>
               </div>
             )}
@@ -1341,13 +1359,26 @@ export const Inspector: React.FC<InspectorProps> = ({
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Daftar Kolom ({selectedTable.columns.length})
               </span>
-              <button
-                onClick={handleAddColumn}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-[11px] font-medium transition-colors cursor-pointer"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Tambah Kolom</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {onSortColumns && selectedTable.columns.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => onSortColumns(selectedTable.id)}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 text-[11px] font-medium transition-colors cursor-pointer"
+                    title="Rapikan urutan kolom sesuai konvensi standar (PK → FK → Atribut → Timestamps)"
+                  >
+                    <ArrowUpDown className="w-3 h-3" />
+                    <span>Rapikan</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleAddColumn}
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Tambah</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">

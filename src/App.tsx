@@ -324,6 +324,8 @@ export const App: React.FC = () => {
     handleDuplicateTables,
     handleAddColumnToTable,
     handleReorderColumns,
+    handleSortTableColumns,
+    handleSortMultipleTablesColumns,
     handleCopySql,
     handleConnect,
     handleGenerateJunctionTable,
@@ -372,6 +374,7 @@ export const App: React.FC = () => {
     handleDeleteTable,
     handleAddColumnToTable,
     handleReorderColumns,
+    handleSortColumns: handleSortTableColumns,
     handleToggleLock,
     handleSelectGroup,
     handleUngroup,
@@ -844,6 +847,13 @@ export const App: React.FC = () => {
             onAlignTables={handleAlignTables}
             onDistributeTables={handleDistributeTables}
             onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
+            onSortColumns={(tableId) => {
+              if (tableId) {
+                handleSortTableColumns(tableId);
+              } else {
+                handleSortMultipleTablesColumns(selectedTableIds.length > 0 ? selectedTableIds : undefined);
+              }
+            }}
             onCreateGroup={handleCreateGroup}
             onUngroup={handleUngroup}
             onRenameGroup={handleRenameGroup}
@@ -925,6 +935,7 @@ export const App: React.FC = () => {
         onAlignTables={handleAlignTables}
         onDistributeTables={handleDistributeTables}
         onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
+        onSortColumns={(scopeIds) => handleSortMultipleTablesColumns(scopeIds)}
         onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
         onOpenImportModal={() => setIsImportOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
@@ -970,6 +981,7 @@ export const App: React.FC = () => {
         onAlignTables={handleAlignTables}
         onDistributeTables={handleDistributeTables}
         onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
+        onSortColumns={(scopeIds) => handleSortMultipleTablesColumns(scopeIds)}
         onAddColumn={handleAddColumnToTable}
         onCopySql={handleCopySql}
         onRenameGroup={handleRenameGroup}

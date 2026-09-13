@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Key, Link2, Plus, Trash2, ListFilter, ChevronDown, GripVertical, Lock, Unlock } from 'lucide-react';
+import { Key, Link2, Plus, Trash2, ListFilter, ChevronDown, GripVertical, Lock, Unlock, ArrowUpDown } from 'lucide-react';
 import { TableData, ColumnData } from '../types/schema';
 import { confirmDialog, showToast } from '../utils/alert';
 import { formatColumnTypeDisplay, parseEnumValues } from '../utils/enumHelper';
@@ -17,6 +17,7 @@ export interface TableNodeData {
   onDeleteColumn?: (tableId: string, columnId: string) => void;
   onEditColumn?: (tableId: string, columnId: string) => void;
   onReorderColumns?: (tableId: string, columns: ColumnData[]) => void;
+  onSortColumns?: (tableId: string) => void;
   onHoverColumn?: (tableId: string | null, colId: string | null) => void;
   onClickColumn?: (tableId: string, colId: string) => void;
   onToggleLock?: (nodeIds: string[]) => void;
@@ -201,6 +202,20 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
               }`}
             >
               {nodeData.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
+          {nodeData.onSortColumns && table.columns.length > 1 && (
+            <button
+              type="button"
+              title="Rapikan Urutan Kolom (PK → FK → Atribut → Timestamps)"
+              onClick={(e) => {
+                e.stopPropagation();
+                nodeData.onSortColumns?.(table.id);
+              }}
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer nodrag"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
             </button>
           )}
 

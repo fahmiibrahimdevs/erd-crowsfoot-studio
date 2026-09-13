@@ -28,6 +28,7 @@ import {
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
   Wand2,
+  ArrowUpDown,
 } from 'lucide-react';
 import { TableData, SqlDialect, EdgeRoutingStyle } from '../types/schema';
 import { AlignMode, DistributeMode } from '../utils/alignment';
@@ -56,6 +57,7 @@ interface CommandPaletteProps {
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onTidyOverlaps?: (scopeIds?: string[]) => void;
+  onSortColumns?: (tableIds?: string[]) => void;
   onOpenTemplatesModal: () => void;
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
@@ -79,6 +81,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onAlignTables,
   onDistributeTables,
   onTidyOverlaps,
+  onSortColumns,
   onOpenTemplatesModal,
   onOpenImportModal,
   onOpenExportModal,
@@ -200,6 +203,34 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onClose();
       },
     });
+
+    if (onSortColumns) {
+      if (selectedTableIds.length > 0) {
+        items.push({
+          id: 'cmd-sort-columns-selected',
+          category: 'commands',
+          title: `Rapikan Urutan Kolom (${selectedTableIds.length} Tabel Terpilih)`,
+          subtitle: 'Urutkan kolom: PK → FK → Atribut Reguler → Timestamps/Audit',
+          icon: <ArrowUpDown className="w-4 h-4 text-sky-400" />,
+          onSelect: () => {
+            onSortColumns(selectedTableIds);
+            onClose();
+          },
+        });
+      }
+
+      items.push({
+        id: 'cmd-sort-columns-all',
+        category: 'commands',
+        title: 'Rapikan Urutan Kolom (Semua Tabel di Canvas)',
+        subtitle: 'Format urutan kolom seluruh tabel: PK → FK → Atribut → Timestamps',
+        icon: <ArrowUpDown className="w-4 h-4 text-sky-400" />,
+        onSelect: () => {
+          onSortColumns();
+          onClose();
+        },
+      });
+    }
 
     const targetTableIdsForAlign = selectedTableIds.length >= 2 ? selectedTableIds : tables.map((t) => t.id);
     const targetScopeLabel = selectedTableIds.length >= 2 ? `${selectedTableIds.length} tabel terpilih` : 'seluruh tabel';

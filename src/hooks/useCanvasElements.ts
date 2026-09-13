@@ -88,6 +88,7 @@ interface UseCanvasElementsProps {
   handleDeleteTable: (tableId: string) => void;
   handleAddColumnToTable: (tableId: string) => void;
   handleReorderColumns: (tableId: string, columns: ColumnData[]) => void;
+  handleSortColumns?: (tableId: string) => void;
   handleToggleLock: (nodeIds: string[]) => void;
   handleSelectGroup: (groupId: string) => void;
   handleUngroup: (groupId: string) => void;
@@ -129,6 +130,7 @@ export function useCanvasElements({
   handleDeleteTable,
   handleAddColumnToTable,
   handleReorderColumns,
+  handleSortColumns,
   handleToggleLock,
   handleSelectGroup,
   handleUngroup,
@@ -309,6 +311,7 @@ export function useCanvasElements({
             onDeleteTable: handleDeleteTable,
             onAddColumn: handleAddColumnToTable,
             onReorderColumns: handleReorderColumns,
+            onSortColumns: handleSortColumns,
             onHoverColumn: handleHoverColumn,
             onClickColumn: handleClickColumn,
             onToggleLock: handleToggleLock,
@@ -481,6 +484,7 @@ export function useCanvasElements({
     handleDeleteTable,
     handleAddColumnToTable,
     handleReorderColumns,
+    handleSortColumns,
     handleHoverColumn,
     handleClickColumn,
     handleUngroup,

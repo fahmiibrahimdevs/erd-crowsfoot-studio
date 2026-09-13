@@ -9,6 +9,11 @@ import {
 } from '../types/schema';
 import { showToast, promptDialog } from '../utils/alert';
 import { generateSqlFromSchema } from '../utils/sqlGenerator';
+import {
+  sortColumns,
+  sortTablesColumns,
+  isTableColumnsSorted,
+} from '../utils/columnSorter';
 
 interface UseTableOperationsProps {
   tables: TableData[];
@@ -346,6 +351,51 @@ export function useTableOperations({
       );
     },
     [updateSchema]
+  );
+
+  const handleSortTableColumns = useCallback(
+    (tableId: string) => {
+      const currentTables = tablesRef.current;
+      const targetTable = currentTables.find((t) => t.id === tableId);
+      if (!targetTable) return;
+
+      if (isTableColumnsSorted(targetTable.columns, targetTable.id, relations)) {
+        showToast(`Kolom tabel "${targetTable.name}" sudah rapi sesuai standar!`, 'info');
+        return;
+      }
+
+      const sorted = sortColumns(targetTable.columns, targetTable.id, relations);
+      updateSchema((prev: TableData[]) =>
+        prev.map((t) => (t.id === tableId ? { ...t, columns: sorted } : t))
+      );
+      showToast(`Urutan kolom tabel "${targetTable.name}" berhasil dirapikan!`, 'success');
+    },
+    [relations, tablesRef, updateSchema]
+  );
+
+  const handleSortMultipleTablesColumns = useCallback(
+    (targetTableIds?: string[]) => {
+      const currentTables = tablesRef.current;
+      const { updatedTables, modifiedCount } = sortTablesColumns(
+        currentTables,
+        relations,
+        targetTableIds
+      );
+
+      if (modifiedCount === 0) {
+        showToast(
+          targetTableIds && targetTableIds.length === 1
+            ? 'Kolom tabel ini sudah rapi sesuai standar!'
+            : 'Semua kolom tabel yang dipilih sudah rapi sesuai standar!',
+          'info'
+        );
+        return;
+      }
+
+      updateSchema(() => updatedTables);
+      showToast(`Berhasil merapikan kolom pada ${modifiedCount} tabel!`, 'success');
+    },
+    [relations, tablesRef, updateSchema]
   );
 
   const handleCopySql = useCallback(
@@ -700,6 +750,8 @@ export function useTableOperations({
     handleDuplicateTables,
     handleAddColumnToTable,
     handleReorderColumns,
+    handleSortTableColumns,
+    handleSortMultipleTablesColumns,
     handleCopySql,
     handleConnect,
     handleGenerateJunctionTable,

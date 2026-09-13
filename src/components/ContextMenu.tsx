@@ -20,6 +20,7 @@ import {
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
   Wand2,
+  ArrowUpDown,
 } from 'lucide-react';
 import { TableData, ErdGroup } from '../types/schema';
 import { AlignMode, DistributeMode } from '../utils/alignment';
@@ -44,6 +45,7 @@ export interface ContextMenuProps {
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onTidyOverlaps?: (scopeIds?: string[]) => void;
+  onSortColumns?: (tableIds?: string[]) => void;
   onAddColumn: (tableId: string) => void;
   onCopySql: (tableId: string) => void;
   onRenameGroup: (groupId: string) => void;
@@ -74,6 +76,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onAlignTables,
   onDistributeTables,
   onTidyOverlaps,
+  onSortColumns,
   onAddColumn,
   onCopySql,
   onRenameGroup,
@@ -321,6 +324,22 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             </div>
           </div>
 
+          {onSortColumns && (
+            <button
+              type="button"
+              onClick={() => {
+                onSortColumns(activeTableIds);
+                onClose();
+              }}
+              className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ArrowUpDown className="w-4 h-4 shrink-0 text-sky-500" />
+                <span className="whitespace-nowrap font-medium text-xs">Rapikan Kolom ({activeTableIds.length} Tabel)</span>
+              </div>
+            </button>
+          )}
+
           <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 
           <button
@@ -379,6 +398,22 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               +
             </span>
           </button>
+
+          {onSortColumns && (
+            <button
+              type="button"
+              onClick={() => {
+                onSortColumns([targetId]);
+                onClose();
+              }}
+              className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ArrowUpDown className="w-4 h-4 shrink-0 text-sky-500" />
+                <span className="whitespace-nowrap font-medium text-xs">Rapikan Urutan Kolom</span>
+              </div>
+            </button>
+          )}
 
           <button
             type="button"
