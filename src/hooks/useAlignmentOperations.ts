@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Node } from '@xyflow/react';
 import { calculateAlignment, calculateDistribution, AlignMode, DistributeMode } from '../utils/alignment';
+import { resolveOverlaps } from '../utils/tidyLayout';
 import { showToast } from '../utils/alert';
 
 interface UseAlignmentOperationsProps {
@@ -114,8 +115,45 @@ export function useAlignmentOperations({
     [lockedNodeIdsRef, nodesRef, setNodes, updateSchema]
   );
 
+  const handleTidyOverlaps = useCallback(
+    (scopeIds?: string[]) => {
+      const { positions: newPositions, movedCount } = resolveOverlaps(
+        nodesRef.current,
+        lockedNodeIdsRef.current,
+        scopeIds
+      );
+
+      if (movedCount === 0) {
+        showToast('Tidak ada tabel yang saling bertumpuk di canvas!', 'info');
+        return;
+      }
+
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          if (newPositions[node.id]) {
+            return {
+              ...node,
+              position: { ...newPositions[node.id] },
+            };
+          }
+          return node;
+        })
+      );
+
+      updateSchema(
+        (prev: any) => prev,
+        (prev: any) => prev,
+        newPositions
+      );
+
+      showToast(`Berhasil merapikan ${movedCount} tabel yang saling bertumpuk!`, 'success');
+    },
+    [lockedNodeIdsRef, nodesRef, setNodes, updateSchema]
+  );
+
   return {
     handleAlignTables,
     handleDistributeTables,
+    handleTidyOverlaps,
   };
 }

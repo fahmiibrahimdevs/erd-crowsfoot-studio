@@ -27,6 +27,7 @@ import {
   AlignEndVertical,
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
+  Wand2,
 } from 'lucide-react';
 import { TableData, SqlDialect, EdgeRoutingStyle } from '../types/schema';
 import { AlignMode, DistributeMode } from '../utils/alignment';
@@ -54,6 +55,7 @@ interface CommandPaletteProps {
   onAutoLayout: () => void;
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
+  onTidyOverlaps?: (scopeIds?: string[]) => void;
   onOpenTemplatesModal: () => void;
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
@@ -76,6 +78,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onAutoLayout,
   onAlignTables,
   onDistributeTables,
+  onTidyOverlaps,
   onOpenTemplatesModal,
   onOpenImportModal,
   onOpenExportModal,
@@ -182,6 +185,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <LayoutGrid className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAutoLayout();
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-tidy-overlaps',
+      category: 'commands',
+      title: 'Pisahkan Tabel Bertumpuk (Tidy Overlaps)',
+      subtitle: 'Dorong tabel-tabel yang saling menutupi ke ruang kosong terdekat',
+      icon: <Wand2 className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onTidyOverlaps?.(selectedTableIds.length > 0 ? selectedTableIds : undefined);
         onClose();
       },
     });

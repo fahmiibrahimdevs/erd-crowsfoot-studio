@@ -28,6 +28,7 @@ import {
   AlignEndVertical,
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
+  Wand2,
 } from 'lucide-react';
 import {
   TableData,
@@ -66,6 +67,7 @@ interface InspectorProps {
   onBatchUpdateColor?: (tableIds: string[], colorTag: string) => void;
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
+  onTidyOverlaps?: (tableIds?: string[]) => void;
   onCreateGroup?: (tableIds: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
@@ -94,6 +96,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onBatchUpdateColor,
   onAlignTables,
   onDistributeTables,
+  onTidyOverlaps,
   onCreateGroup,
   onUngroup,
   onRenameGroup,
@@ -506,6 +509,21 @@ export const Inspector: React.FC<InspectorProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Tidy Up Overlaps */}
+            {onTidyOverlaps && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => onTidyOverlaps(selectedTables.map((t) => t.id))}
+                  className="w-full py-2 px-2.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                  title="Pisahkan tabel terpilih jika ada yang bertumpuk"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>Rapikan Tabrakan Seleksi (Tidy)</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Batch Color Preset Palette */}

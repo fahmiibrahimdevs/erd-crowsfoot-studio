@@ -19,6 +19,7 @@ import {
   AlignEndVertical,
   AlignHorizontalSpaceBetween,
   AlignVerticalSpaceBetween,
+  Wand2,
 } from 'lucide-react';
 import { TableData, ErdGroup } from '../types/schema';
 import { AlignMode, DistributeMode } from '../utils/alignment';
@@ -42,6 +43,7 @@ export interface ContextMenuProps {
   onDeleteSelected: () => void;
   onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
+  onTidyOverlaps?: (scopeIds?: string[]) => void;
   onAddColumn: (tableId: string) => void;
   onCopySql: (tableId: string) => void;
   onRenameGroup: (groupId: string) => void;
@@ -71,6 +73,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onDeleteSelected,
   onAlignTables,
   onDistributeTables,
+  onTidyOverlaps,
   onAddColumn,
   onCopySql,
   onRenameGroup,
@@ -571,12 +574,28 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <Sparkles className="w-4 h-4 shrink-0 text-sky-500" />
-              <span className="whitespace-nowrap font-medium text-xs">Rapikan Otomatis (Auto-Layout)</span>
+              <span className="whitespace-nowrap font-medium text-xs">Tata Ulang (Auto-Layout)</span>
             </div>
             <span className="shrink-0 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
               Ctrl+L
             </span>
           </button>
+
+          {onTidyOverlaps && (
+            <button
+              type="button"
+              onClick={() => {
+                onTidyOverlaps();
+                onClose();
+              }}
+              className="w-full flex items-center justify-between gap-4 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Wand2 className="w-4 h-4 shrink-0 text-sky-500" />
+                <span className="whitespace-nowrap font-medium text-xs">Pisahkan Tabrakan (Tidy Overlaps)</span>
+              </div>
+            </button>
+          )}
 
           <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 

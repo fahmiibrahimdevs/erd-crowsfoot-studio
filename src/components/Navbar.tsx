@@ -15,6 +15,7 @@ import {
   Play,
   ChevronDown,
   Check,
+  Wand2,
 } from 'lucide-react';
 import { SqlDialect } from '../types/schema';
 import { confirmDialog, showToast } from '../utils/alert';
@@ -26,6 +27,7 @@ interface NavbarProps {
   setDialect: (dialect: SqlDialect) => void;
   onAddTable: () => void;
   onAutoLayout: () => void;
+  onTidyOverlaps?: () => void;
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
   onOpenTemplatesModal: () => void;
@@ -55,6 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setDialect,
   onAddTable,
   onAutoLayout,
+  onTidyOverlaps,
   onOpenImportModal,
   onOpenExportModal,
   onOpenTemplatesModal,
@@ -268,11 +271,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={handleAutoLayoutClick}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-            title="Rapikan tata letak canvas secara otomatis"
+            title="Tata ulang seluruh tata letak canvas secara otomatis"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
             <span className="hidden xl:inline">Auto Layout</span>
           </button>
+
+          {/* Tidy Overlaps */}
+          {onTidyOverlaps && (
+            <button
+              type="button"
+              onClick={onTidyOverlaps}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
+              title="Pisahkan tabel yang saling bertumpuk (Tidy Overlaps)"
+            >
+              <Wand2 className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+              <span className="hidden xl:inline">Rapikan Tabrakan</span>
+            </button>
+          )}
 
           {/* Templates */}
           <button

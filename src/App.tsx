@@ -305,8 +305,8 @@ export const App: React.FC = () => {
     updateSchema,
   });
 
-  // Alignment Operations Hook (Align & Distribute)
-  const { handleAlignTables, handleDistributeTables } = useAlignmentOperations({
+  // Alignment & Layout Operations Hook (Align, Distribute, Tidy Overlaps)
+  const { handleAlignTables, handleDistributeTables, handleTidyOverlaps } = useAlignmentOperations({
     nodesRef,
     setNodes,
     lockedNodeIdsRef,
@@ -675,6 +675,7 @@ export const App: React.FC = () => {
           setDialect={setDialect}
           onAddTable={handleAddTable}
           onAutoLayout={handleAutoLayout}
+          onTidyOverlaps={() => handleTidyOverlaps()}
           onOpenImportModal={() => setIsImportOpen(true)}
           onOpenExportModal={() => setIsExportOpen(true)}
           onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
@@ -842,6 +843,7 @@ export const App: React.FC = () => {
             onBatchUpdateColor={handleBatchUpdateColor}
             onAlignTables={handleAlignTables}
             onDistributeTables={handleDistributeTables}
+            onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
             onCreateGroup={handleCreateGroup}
             onUngroup={handleUngroup}
             onRenameGroup={handleRenameGroup}
@@ -922,6 +924,7 @@ export const App: React.FC = () => {
         onAutoLayout={handleAutoLayout}
         onAlignTables={handleAlignTables}
         onDistributeTables={handleDistributeTables}
+        onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
         onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
         onOpenImportModal={() => setIsImportOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
@@ -966,6 +969,7 @@ export const App: React.FC = () => {
         }}
         onAlignTables={handleAlignTables}
         onDistributeTables={handleDistributeTables}
+        onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
         onAddColumn={handleAddColumnToTable}
         onCopySql={handleCopySql}
         onRenameGroup={handleRenameGroup}
