@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Node,
   Edge,
+  NodeChange,
   useNodesState,
   useEdgesState,
   Connection,
@@ -318,6 +319,9 @@ export const App: React.FC = () => {
     }
   });
 
+  const lockedNodeIdsRef = useRef(lockedNodeIds);
+  lockedNodeIdsRef.current = lockedNodeIds;
+
   const [contextMenu, setContextMenu] = useState<{
     isOpen: boolean;
     x: number;
@@ -388,6 +392,26 @@ export const App: React.FC = () => {
 
   const nodesRef = useRef<Node[]>([]);
   nodesRef.current = nodes;
+
+  // Intercept node position changes to strictly freeze locked tables and groups
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      const filteredChanges = changes.filter((c) => {
+        if (c.type === 'position' && 'id' in c) {
+          if (lockedNodeIdsRef.current.includes(c.id)) {
+            return false;
+          }
+          const parentGroup = groupsRef.current.find((g) => g.tableIds.includes(c.id));
+          if (parentGroup && lockedNodeIdsRef.current.includes(parentGroup.id)) {
+            return false;
+          }
+        }
+        return true;
+      });
+      onNodesChange(filteredChanges);
+    },
+    [onNodesChange]
+  );
 
   // Stable helper to retrieve current node positions map without re-triggering dependency chains
   const getNodePositions = useCallback(() => {
@@ -728,19 +752,42 @@ export const App: React.FC = () => {
     [updateSchema]
   );
 
-  // Toggle Lock/Unlock position for tables or groups
+  // Toggle Lock/Unlock position for tables or groups (Cascading group locking to member tables)
   const handleToggleLock = useCallback((nodeIds: string[]) => {
     if (nodeIds.length === 0) return;
     setLockedNodeIds((prev) => {
-      const allLocked = nodeIds.every((id) => prev.includes(id));
+      // Expand any group IDs in nodeIds to also include their member tableIds
+      const allTargetIds = new Set<string>();
+      nodeIds.forEach((id) => {
+        allTargetIds.add(id);
+        const group = groupsRef.current.find((g) => g.id === id);
+        if (group) {
+          group.tableIds.forEach((tId) => allTargetIds.add(tId));
+        }
+      });
+      const targetArray = Array.from(allTargetIds);
+
+      const allLocked = targetArray.every((id) => prev.includes(id));
       let next: string[];
       if (allLocked) {
-        next = prev.filter((id) => !nodeIds.includes(id));
-        showToast(`Kunci posisi ${nodeIds.length} elemen telah dibuka (Unlocked)`, 'info');
+        next = prev.filter((id) => !targetArray.includes(id));
+        const isSingleGroup = nodeIds.length === 1 && groupsRef.current.some((g) => g.id === nodeIds[0]);
+        showToast(
+          isSingleGroup
+            ? 'Grup dan seluruh tabel di dalamnya telah dibuka kuncinya (Unlocked)'
+            : `Kunci posisi ${nodeIds.length} elemen telah dibuka (Unlocked)`,
+          'info'
+        );
       } else {
-        const set = new Set([...prev, ...nodeIds]);
+        const set = new Set([...prev, ...targetArray]);
         next = Array.from(set);
-        showToast(`Posisi ${nodeIds.length} elemen telah dikunci (Locked)`, 'info');
+        const isSingleGroup = nodeIds.length === 1 && groupsRef.current.some((g) => g.id === nodeIds[0]);
+        showToast(
+          isSingleGroup
+            ? 'Grup dan seluruh tabel di dalamnya telah dikunci (Locked)'
+            : `Posisi ${nodeIds.length} elemen telah dikunci (Locked)`,
+          'info'
+        );
       }
       try {
         localStorage.setItem('er_studio_locked_nodes', JSON.stringify(next));
@@ -1512,7 +1559,10 @@ export const App: React.FC = () => {
           selectedTableIdsRef.current.includes(table.id) ||
           selectedTableIdRef.current === table.id;
 
-        const isLocked = lockedNodeIds.includes(table.id);
+        const isTableInLockedGroup = groups.some(
+          (g) => lockedNodeIds.includes(g.id) && g.tableIds.includes(table.id)
+        );
+        const isLocked = lockedNodeIds.includes(table.id) || isTableInLockedGroup;
 
         return {
           id: table.id,
@@ -1533,6 +1583,7 @@ export const App: React.FC = () => {
             onReorderColumns: handleReorderColumns,
             onHoverColumn: handleHoverColumn,
             onClickColumn: handleClickColumn,
+            onToggleLock: handleToggleLock,
           },
         };
       });
@@ -1659,7 +1710,9 @@ export const App: React.FC = () => {
         const isGroupSelected =
           (existingGroupNode?.selected ?? false) || selectedGroupIdRef.current === group.id;
 
-        const isGroupLocked = lockedNodeIds.includes(group.id);
+        const isGroupLocked =
+          lockedNodeIds.includes(group.id) ||
+          (memberTables.length > 0 && memberTables.every((t) => lockedNodeIds.includes(t.id)));
 
         groupNodes.push({
           id: group.id,
@@ -1680,6 +1733,7 @@ export const App: React.FC = () => {
             onUngroup: handleUngroup,
             onRenameGroup: handleRenameGroup,
             onDeleteGroup: handleDeleteGroup,
+            onToggleLock: handleToggleLock,
           },
         });
       });
@@ -2353,12 +2407,24 @@ export const App: React.FC = () => {
 
   // Auto Layout
   const handleAutoLayout = useCallback(() => {
+    const currentPosMap = getNodePositions();
     const { nodes: layoutedNodes } = getAutoLayoutedElements(nodes, edges, 'LR');
-    setNodes([...layoutedNodes]);
+    
     const newPosMap: Record<string, { x: number; y: number }> = {};
     layoutedNodes.forEach((n) => {
-      newPosMap[n.id] = { ...n.position };
+      const parentGroup = groupsRef.current.find((g) => g.tableIds.includes(n.id));
+      const isLocked =
+        lockedNodeIdsRef.current.includes(n.id) ||
+        (parentGroup && lockedNodeIdsRef.current.includes(parentGroup.id));
+      if (isLocked && currentPosMap[n.id]) {
+        newPosMap[n.id] = { ...currentPosMap[n.id] };
+        n.position = { ...currentPosMap[n.id] };
+      } else {
+        newPosMap[n.id] = { ...n.position };
+      }
     });
+
+    setNodes([...layoutedNodes]);
 
     updateSchema(
       (prev) => prev,
@@ -2369,7 +2435,7 @@ export const App: React.FC = () => {
     setTimeout(() => {
       rfInstanceRef.current?.fitView({ padding: 0.2, duration: 400 });
     }, 50);
-  }, [nodes, edges, setNodes, updateSchema]);
+  }, [nodes, edges, setNodes, updateSchema, getNodePositions]);
 
   // Focus specific table
   const handleFocusTable = useCallback(
@@ -2388,7 +2454,6 @@ export const App: React.FC = () => {
     [nodes]
   );
 
-  // Import SQL DDL
   // Import SQL DDL
   const handleImportSql = (newTables: TableData[], newRelations: RelationshipData[]) => {
     updateSchema(newTables, newRelations, undefined, () => []);
@@ -2431,15 +2496,28 @@ export const App: React.FC = () => {
   // Group & Node drag events for Realtime Synchronized Movement (Rigid Body with 60FPS rAF Throttling)
   const handleNodeDragStart = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      if (lockedNodeIdsRef.current.includes(node.id)) {
+        isDraggingRef.current = false;
+        dragGroupStartRef.current = null;
+        return;
+      }
+      const parentGroup = groupsRef.current.find((g) => g.tableIds.includes(node.id));
+      if (parentGroup && lockedNodeIdsRef.current.includes(parentGroup.id)) {
+        isDraggingRef.current = false;
+        dragGroupStartRef.current = null;
+        return;
+      }
       isDraggingRef.current = true;
       const group = groupsRef.current.find((g) => g.id === node.id);
       if (group) {
         const currentPosMap = getNodePositions();
         const startTablePositions: Record<string, { x: number; y: number }> = {};
         group.tableIds.forEach((tId) => {
-          startTablePositions[tId] = {
-            ...(currentPosMap[tId] || historyState.positions?.[tId] || { x: 0, y: 0 }),
-          };
+          if (!lockedNodeIdsRef.current.includes(tId)) {
+            startTablePositions[tId] = {
+              ...(currentPosMap[tId] || historyState.positions?.[tId] || { x: 0, y: 0 }),
+            };
+          }
         });
 
         dragGroupStartRef.current = {
@@ -2456,6 +2534,10 @@ export const App: React.FC = () => {
 
   const handleNodeDrag = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      if (lockedNodeIdsRef.current.includes(node.id)) return;
+      const parentGroup = groupsRef.current.find((g) => g.tableIds.includes(node.id));
+      if (parentGroup && lockedNodeIdsRef.current.includes(parentGroup.id)) return;
+
       if (dragGroupStartRef.current && dragGroupStartRef.current.groupId === node.id) {
         const { startGroupPos, startTablePositions } = dragGroupStartRef.current;
         const deltaX = node.position.x - startGroupPos.x;
@@ -2470,7 +2552,7 @@ export const App: React.FC = () => {
           dragRafIdRef.current = null;
           setNodes((prevNodes) =>
             prevNodes.map((n) => {
-              if (startTablePositions[n.id]) {
+              if (startTablePositions[n.id] && !lockedNodeIdsRef.current.includes(n.id)) {
                 const init = startTablePositions[n.id];
                 return {
                   ...n,
@@ -2498,6 +2580,16 @@ export const App: React.FC = () => {
       }
       isDraggingRef.current = false;
 
+      if (lockedNodeIdsRef.current.includes(node.id)) {
+        dragGroupStartRef.current = null;
+        return;
+      }
+      const parentGroup = groupsRef.current.find((g) => g.tableIds.includes(node.id));
+      if (parentGroup && lockedNodeIdsRef.current.includes(parentGroup.id)) {
+        dragGroupStartRef.current = null;
+        return;
+      }
+
       if (dragGroupStartRef.current && dragGroupStartRef.current.groupId === node.id) {
         const { startGroupPos, startTablePositions } = dragGroupStartRef.current;
         const deltaX = node.position.x - startGroupPos.x;
@@ -2511,11 +2603,13 @@ export const App: React.FC = () => {
           const currentPosMap = getNodePositions();
           const nextPosMap = { ...currentPosMap };
           group.tableIds.forEach((tId) => {
-            const init = startTablePositions[tId] || currentPosMap[tId] || { x: 0, y: 0 };
-            nextPosMap[tId] = {
-              x: Math.round(init.x + deltaX),
-              y: Math.round(init.y + deltaY),
-            };
+            if (!lockedNodeIdsRef.current.includes(tId)) {
+              const init = startTablePositions[tId] || currentPosMap[tId] || { x: 0, y: 0 };
+              nextPosMap[tId] = {
+                x: Math.round(init.x + deltaX),
+                y: Math.round(init.y + deltaY),
+              };
+            }
           });
 
           // Shift waypoints of internal relations
@@ -3180,7 +3274,7 @@ export const App: React.FC = () => {
           <Canvas
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
+            onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={handleConnect}
             routingStyle={routingStyle}
@@ -3259,6 +3353,8 @@ export const App: React.FC = () => {
             tables={tables}
             relations={relations}
             dialect={dialect}
+            lockedNodeIds={lockedNodeIds}
+            onToggleLock={handleToggleLock}
             onClose={() => {
               setSelectedTableId(null);
               setSelectedTableIds([]);

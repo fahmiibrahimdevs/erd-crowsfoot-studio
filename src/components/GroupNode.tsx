@@ -15,11 +15,12 @@ export interface GroupNodeData {
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
   onDeleteGroup?: (groupId: string) => void;
+  onToggleLock?: (nodeIds: string[]) => void;
 }
 
 export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   const nodeData = data as unknown as GroupNodeData;
-  const { group, width, height, tableCount, onSelectGroup, onUngroup, onRenameGroup, onDeleteGroup } = nodeData;
+  const { group, width, height, tableCount, onSelectGroup, onUngroup, onRenameGroup, onDeleteGroup, onToggleLock } = nodeData;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(group?.name || 'Group');
@@ -64,6 +65,8 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
         height: Math.max(200, height),
       }}
       className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 pointer-events-auto group-node-container ${
+        nodeData.isLocked ? 'nodrag !cursor-default' : ''
+      } ${
         selected
           ? 'border-sky-500/80 bg-sky-500/5 ring-2 ring-sky-500/30'
           : 'border-slate-300 dark:border-slate-800/80 bg-slate-100/30 dark:bg-slate-900/20 hover:border-slate-400 dark:hover:border-slate-700'
@@ -72,7 +75,9 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
       {/* Group Header Label Bar */}
       <div className="absolute top-2.5 left-3 z-10 flex items-center gap-2 max-w-[calc(100%-24px)]">
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing group/header shrink-0"
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 group/header shrink-0 ${
+            nodeData.isLocked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
+          }`}
         >
           <div
             className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -117,18 +122,43 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                 {tableCount} tabel
               </span>
               {nodeData.isLocked && (
-                <span
-                  title="Posisi grup terkunci (Lock)"
-                  className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1 py-0.5 rounded text-[10px] shrink-0"
+                <button
+                  type="button"
+                  title="Posisi grup terkunci (Klik untuk membuka kunci)"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleLock?.([group.id]);
+                  }}
+                  className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] shrink-0 cursor-pointer nodrag transition-colors"
                 >
-                  <Lock className="w-2.5 h-2.5" />
-                </span>
+                  <Lock className="w-2.5 h-2.5 mr-1" />
+                  <span>Locked</span>
+                </button>
               )}
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1 ml-1 border-l border-slate-200 dark:border-slate-800 pl-1.5 nodrag export-hide">
+            {/* Quick Lock / Unlock Button */}
+            {onToggleLock && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLock([group.id]);
+                }}
+                title={nodeData.isLocked ? 'Buka Kunci Grup (Unlock)' : 'Kunci Posisi Grup (Lock)'}
+                className={`p-1 rounded transition-colors cursor-pointer ${
+                  nodeData.isLocked
+                    ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-500/20'
+                    : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {nodeData.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              </button>
+            )}
+
             {!isEditing && (
               <button
                 type="button"

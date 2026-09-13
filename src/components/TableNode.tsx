@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Key, Link2, Plus, Trash2, ListFilter, ChevronDown, GripVertical, Lock } from 'lucide-react';
+import { Key, Link2, Plus, Trash2, ListFilter, ChevronDown, GripVertical, Lock, Unlock } from 'lucide-react';
 import { TableData, ColumnData } from '../types/schema';
 import { confirmDialog, showToast } from '../utils/alert';
 import { formatColumnTypeDisplay, parseEnumValues } from '../utils/enumHelper';
@@ -19,6 +19,7 @@ export interface TableNodeData {
   onReorderColumns?: (tableId: string, columns: ColumnData[]) => void;
   onHoverColumn?: (tableId: string | null, colId: string | null) => void;
   onClickColumn?: (tableId: string, colId: string) => void;
+  onToggleLock?: (nodeIds: string[]) => void;
 }
 
 export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
@@ -138,6 +139,8 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
     <div
       onClick={(e) => onSelectTable?.(table.id, e)}
       className={`group relative w-[280px] bg-white dark:bg-slate-900 rounded-xl border transition-all duration-200 table-node-container ${
+        nodeData.isLocked ? 'nodrag !cursor-default' : ''
+      } ${
         selected
           ? 'border-sky-500/80 ring-2 ring-sky-500/30 shadow-md shadow-sky-500/10'
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
@@ -150,7 +153,11 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
       />
 
       {/* Table Header */}
-      <div className="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing">
+      <div
+        className={`px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 ${
+          nodeData.isLocked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
+        }`}
+      >
         <div className="flex items-center gap-2 min-w-0">
           <div
             className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -163,16 +170,40 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             {table.columns.length} kolom
           </span>
           {nodeData.isLocked && (
-            <span
-              title="Posisi tabel terkunci (Lock)"
-              className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1 py-0.5 rounded text-[10px] shrink-0"
+            <button
+              type="button"
+              title="Posisi tabel terkunci (Klik untuk membuka kunci)"
+              onClick={(e) => {
+                e.stopPropagation();
+                nodeData.onToggleLock?.([table.id]);
+              }}
+              className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] shrink-0 cursor-pointer nodrag transition-colors"
             >
               <Lock className="w-2.5 h-2.5" />
-            </span>
+            </button>
           )}
         </div>
 
         <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity export-hide">
+          {/* Quick Lock / Unlock Button */}
+          {nodeData.onToggleLock && (
+            <button
+              type="button"
+              title={nodeData.isLocked ? 'Buka Kunci Posisi (Unlock)' : 'Kunci Posisi Tabel (Lock)'}
+              onClick={(e) => {
+                e.stopPropagation();
+                nodeData.onToggleLock?.([table.id]);
+              }}
+              className={`p-1 rounded transition-colors cursor-pointer nodrag ${
+                nodeData.isLocked
+                  ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-500/20'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+            >
+              {nodeData.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
           <button
             title="Tambah Kolom"
             onClick={(e) => {

@@ -17,6 +17,7 @@ import {
   RotateCcw,
   MoveHorizontal,
   Boxes,
+  Lock,
   Unlock,
   Edit3,
 } from 'lucide-react';
@@ -46,6 +47,8 @@ interface InspectorProps {
   tables: TableData[];
   relations: RelationshipData[];
   dialect: SqlDialect;
+  lockedNodeIds?: string[];
+  onToggleLock?: (nodeIds: string[]) => void;
   onClose: () => void;
   onDeselectTable?: (tableId: string) => void;
   onUpdateTable: (updatedTable: TableData) => void;
@@ -70,6 +73,8 @@ export const Inspector: React.FC<InspectorProps> = ({
   tables,
   relations,
   dialect,
+  lockedNodeIds = [],
+  onToggleLock,
   onClose,
   onDeselectTable,
   onUpdateTable,
@@ -232,6 +237,30 @@ export const Inspector: React.FC<InspectorProps> = ({
 
           {/* Actions */}
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+            {onToggleLock && (
+              <button
+                type="button"
+                onClick={() => onToggleLock([selectedGroup.id])}
+                className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border ${
+                  lockedNodeIds.includes(selectedGroup.id)
+                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-500 hover:bg-amber-500/25'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-500/40 hover:text-amber-500'
+                }`}
+              >
+                {lockedNodeIds.includes(selectedGroup.id) ? (
+                  <>
+                    <Unlock className="w-4 h-4 text-amber-500" />
+                    <span>Buka Kunci Posisi Grup (Unlock)</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 text-amber-500" />
+                    <span>Kunci Posisi Seluruh Grup (Lock)</span>
+                  </>
+                )}
+              </button>
+            )}
+
             <button
               onClick={handleUngroupClick}
               className="w-full py-2.5 px-3 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
@@ -373,8 +402,19 @@ export const Inspector: React.FC<InspectorProps> = ({
             </div>
           </div>
 
-          {/* Batch Delete Action */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+          {/* Batch Actions */}
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+            {onToggleLock && (
+              <button
+                type="button"
+                onClick={() => onToggleLock(selectedTables.map((t) => t.id))}
+                className="w-full py-2.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              >
+                <Lock className="w-4 h-4 text-amber-500" />
+                <span>Kunci / Buka Kunci {selectedTables.length} Tabel Terpilih</span>
+              </button>
+            )}
+
             <button
               onClick={handleBatchDelete}
               className="w-full py-2.5 px-3 bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
@@ -595,28 +635,56 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         <div className="flex items-center gap-1">
           {selectedTable && (
-            <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800 mr-1">
-              <button
-                onClick={() => setActiveTab('properties')}
-                className={`px-2 py-0.5 text-[11px] rounded transition-colors cursor-pointer ${
-                  activeTab === 'properties'
-                    ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-medium shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                Properti
-              </button>
-              <button
-                onClick={() => setActiveTab('sql')}
-                className={`px-2 py-0.5 text-[11px] rounded transition-colors cursor-pointer ${
-                  activeTab === 'sql'
-                    ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-medium shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                SQL
-              </button>
-            </div>
+            <>
+              {onToggleLock && (
+                <button
+                  type="button"
+                  onClick={() => onToggleLock([selectedTable.id])}
+                  title={
+                    lockedNodeIds.includes(selectedTable.id)
+                      ? 'Buka Kunci Posisi (Unlock)'
+                      : 'Kunci Posisi Tabel (Lock)'
+                  }
+                  className={`p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 transition-all cursor-pointer mr-1 ${
+                    lockedNodeIds.includes(selectedTable.id)
+                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-500 hover:bg-amber-500/25'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {lockedNodeIds.includes(selectedTable.id) ? (
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                  ) : (
+                    <Unlock className="w-3.5 h-3.5" />
+                  )}
+                  <span className="text-[11px] hidden sm:inline">
+                    {lockedNodeIds.includes(selectedTable.id) ? 'Terkunci' : 'Kunci'}
+                  </span>
+                </button>
+              )}
+
+              <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800 mr-1">
+                <button
+                  onClick={() => setActiveTab('properties')}
+                  className={`px-2 py-0.5 text-[11px] rounded transition-colors cursor-pointer ${
+                    activeTab === 'properties'
+                      ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-medium shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Properti
+                </button>
+                <button
+                  onClick={() => setActiveTab('sql')}
+                  className={`px-2 py-0.5 text-[11px] rounded transition-colors cursor-pointer ${
+                    activeTab === 'sql'
+                      ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-medium shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  SQL
+                </button>
+              </div>
+            </>
           )}
           <button
             onClick={onClose}
