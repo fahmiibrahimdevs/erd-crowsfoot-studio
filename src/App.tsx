@@ -36,6 +36,7 @@ import { useTableOperations } from './hooks/useTableOperations';
 import { useGroupOperations } from './hooks/useGroupOperations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useWorkspaceManager, getInitialWorkspaceState } from './hooks/useWorkspaceManager';
+import { useAlignmentOperations } from './hooks/useAlignmentOperations';
 
 const ROUTING_STYLE_KEY = 'er_studio_routing_style';
 const THEME_KEY = 'er_studio_theme';
@@ -301,6 +302,14 @@ export const App: React.FC = () => {
     setSelectedGroupId,
     setSelectedTableId,
     setSelectedTableIds,
+    updateSchema,
+  });
+
+  // Alignment Operations Hook (Align & Distribute)
+  const { handleAlignTables, handleDistributeTables } = useAlignmentOperations({
+    nodesRef,
+    setNodes,
+    lockedNodeIdsRef,
     updateSchema,
   });
 
@@ -831,6 +840,8 @@ export const App: React.FC = () => {
             onDeleteTable={handleDeleteTable}
             onBatchDeleteTables={handleBatchDeleteTables}
             onBatchUpdateColor={handleBatchUpdateColor}
+            onAlignTables={handleAlignTables}
+            onDistributeTables={handleDistributeTables}
             onCreateGroup={handleCreateGroup}
             onUngroup={handleUngroup}
             onRenameGroup={handleRenameGroup}
@@ -905,9 +916,12 @@ export const App: React.FC = () => {
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         tables={tables}
+        selectedTableIds={selectedTableIds}
         onNavigateToTable={handleNavigateToTable}
         onAddTable={handleAddTable}
         onAutoLayout={handleAutoLayout}
+        onAlignTables={handleAlignTables}
+        onDistributeTables={handleDistributeTables}
         onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
         onOpenImportModal={() => setIsImportOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
@@ -950,6 +964,8 @@ export const App: React.FC = () => {
             handleDeleteTable(selectedTableId);
           }
         }}
+        onAlignTables={handleAlignTables}
+        onDistributeTables={handleDistributeTables}
         onAddColumn={handleAddColumnToTable}
         onCopySql={handleCopySql}
         onRenameGroup={handleRenameGroup}

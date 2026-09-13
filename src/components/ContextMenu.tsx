@@ -11,8 +11,17 @@ import {
   Sparkles,
   FileCode,
   Edit2,
+  AlignStartHorizontal,
+  AlignCenterHorizontal,
+  AlignEndHorizontal,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
+  AlignHorizontalSpaceBetween,
+  AlignVerticalSpaceBetween,
 } from 'lucide-react';
 import { TableData, ErdGroup } from '../types/schema';
+import { AlignMode, DistributeMode } from '../utils/alignment';
 
 export interface ContextMenuProps {
   x: number;
@@ -31,6 +40,8 @@ export interface ContextMenuProps {
   onToggleLock: (nodeIds: string[]) => void;
   onDuplicateTables: (tableIds: string[]) => void;
   onDeleteSelected: () => void;
+  onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
+  onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onAddColumn: (tableId: string) => void;
   onCopySql: (tableId: string) => void;
   onRenameGroup: (groupId: string) => void;
@@ -58,6 +69,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onToggleLock,
   onDuplicateTables,
   onDeleteSelected,
+  onAlignTables,
+  onDistributeTables,
   onAddColumn,
   onCopySql,
   onRenameGroup,
@@ -199,6 +212,111 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               Ctrl+D
             </span>
           </button>
+
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
+
+          {/* Quick Alignment Actions */}
+          <div className="px-2 py-1 space-y-1">
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              Ratakan Posisi (Align)
+            </span>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                type="button"
+                title="Rata Kiri"
+                onClick={() => {
+                  onAlignTables?.('left', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignStartHorizontal className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Rata Tengah Horizontal"
+                onClick={() => {
+                  onAlignTables?.('center', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignCenterHorizontal className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Rata Kanan"
+                onClick={() => {
+                  onAlignTables?.('right', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignEndHorizontal className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                type="button"
+                title="Rata Atas"
+                onClick={() => {
+                  onAlignTables?.('top', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignStartVertical className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Rata Tengah Vertikal"
+                onClick={() => {
+                  onAlignTables?.('middle', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignCenterVertical className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Rata Bawah"
+                onClick={() => {
+                  onAlignTables?.('bottom', activeTableIds);
+                  onClose();
+                }}
+                className="p-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignEndVertical className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-1 pt-0.5">
+              <button
+                type="button"
+                title="Ratakan Jarak Spasi Horizontal"
+                onClick={() => {
+                  onDistributeTables?.('horizontal', activeTableIds);
+                  onClose();
+                }}
+                className="py-1 px-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center gap-1 text-[10px] text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignHorizontalSpaceBetween className="w-3.5 h-3.5" />
+                <span>Distribusi H</span>
+              </button>
+              <button
+                type="button"
+                title="Ratakan Jarak Spasi Vertikal"
+                onClick={() => {
+                  onDistributeTables?.('vertical', activeTableIds);
+                  onClose();
+                }}
+                className="py-1 px-1.5 rounded-md hover:bg-sky-500/10 hover:text-sky-500 flex items-center justify-center gap-1 text-[10px] text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-transparent hover:border-sky-500/30"
+              >
+                <AlignVerticalSpaceBetween className="w-3.5 h-3.5" />
+                <span>Distribusi V</span>
+              </button>
+            </div>
+          </div>
 
           <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-1" />
 

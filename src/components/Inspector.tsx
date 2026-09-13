@@ -20,6 +20,14 @@ import {
   Lock,
   Unlock,
   Edit3,
+  AlignStartHorizontal,
+  AlignCenterHorizontal,
+  AlignEndHorizontal,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
+  AlignHorizontalSpaceBetween,
+  AlignVerticalSpaceBetween,
 } from 'lucide-react';
 import {
   TableData,
@@ -34,6 +42,7 @@ import {
   EndpointMarkerType,
   ReferentialAction,
 } from '../types/schema';
+import { AlignMode, DistributeMode } from '../utils/alignment';
 import { generateSql } from '../utils/sqlGenerator';
 import { SearchableSelect } from './SearchableSelect';
 import { EnumPillEditor } from './EnumPillEditor';
@@ -55,6 +64,8 @@ interface InspectorProps {
   onDeleteTable: (tableId: string) => void;
   onBatchDeleteTables?: (tableIds: string[]) => void;
   onBatchUpdateColor?: (tableIds: string[], colorTag: string) => void;
+  onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
+  onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onCreateGroup?: (tableIds: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
@@ -81,6 +92,8 @@ export const Inspector: React.FC<InspectorProps> = ({
   onDeleteTable,
   onBatchDeleteTables,
   onBatchUpdateColor,
+  onAlignTables,
+  onDistributeTables,
   onCreateGroup,
   onUngroup,
   onRenameGroup,
@@ -381,6 +394,117 @@ export const Inspector: React.FC<InspectorProps> = ({
                   </button>
                 </span>
               ))}
+            </div>
+          </div>
+
+          {/* Alignment & Distribution Section */}
+          <div className="p-3 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-1">
+                Perataan Posisi (Alignment)
+              </label>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2">
+                Selaraskan koordinat tabel terpilih dalam satu garis.
+              </p>
+            </div>
+
+            {/* Horizontal Alignment */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Horizontal
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  title="Rata Kiri (Align Left)"
+                  onClick={() => onAlignTables?.('left', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignStartHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Kiri</span>
+                </button>
+                <button
+                  type="button"
+                  title="Rata Tengah Horizontal (Align Center)"
+                  onClick={() => onAlignTables?.('center', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignCenterHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Tengah</span>
+                </button>
+                <button
+                  type="button"
+                  title="Rata Kanan (Align Right)"
+                  onClick={() => onAlignTables?.('right', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignEndHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Kanan</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Vertical Alignment */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Vertikal
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  title="Rata Atas (Align Top)"
+                  onClick={() => onAlignTables?.('top', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignStartVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Atas</span>
+                </button>
+                <button
+                  type="button"
+                  title="Rata Tengah Vertikal (Align Middle)"
+                  onClick={() => onAlignTables?.('middle', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignCenterVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Tengah</span>
+                </button>
+                <button
+                  type="button"
+                  title="Rata Bawah (Align Bottom)"
+                  onClick={() => onAlignTables?.('bottom', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignEndVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Bawah</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Distribution */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
+              <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Ratakan Jarak Spasi (Distribute)
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  title="Ratakan Jarak Spasi Horizontal"
+                  onClick={() => onDistributeTables?.('horizontal', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignHorizontalSpaceBetween className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Horizontal</span>
+                </button>
+                <button
+                  type="button"
+                  title="Ratakan Jarak Spasi Vertikal"
+                  onClick={() => onDistributeTables?.('vertical', selectedTables.map((t) => t.id))}
+                  className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
+                >
+                  <AlignVerticalSpaceBetween className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-[11px] font-medium">Vertikal</span>
+                </button>
+              </div>
             </div>
           </div>
 

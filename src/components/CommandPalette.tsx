@@ -19,8 +19,17 @@ import {
   X,
   ArrowRight,
   Command,
+  AlignStartHorizontal,
+  AlignCenterHorizontal,
+  AlignEndHorizontal,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
+  AlignHorizontalSpaceBetween,
+  AlignVerticalSpaceBetween,
 } from 'lucide-react';
 import { TableData, SqlDialect, EdgeRoutingStyle } from '../types/schema';
+import { AlignMode, DistributeMode } from '../utils/alignment';
 import { formatColumnTypeDisplay } from '../utils/enumHelper';
 
 export interface CommandPaletteItem {
@@ -39,9 +48,12 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   tables: TableData[];
+  selectedTableIds?: string[];
   onNavigateToTable: (tableId: string, columnId?: string) => void;
   onAddTable: () => void;
   onAutoLayout: () => void;
+  onAlignTables?: (mode: AlignMode, tableIds: string[]) => void;
+  onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onOpenTemplatesModal: () => void;
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
@@ -58,9 +70,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   onClose,
   tables,
+  selectedTableIds = [],
   onNavigateToTable,
   onAddTable,
   onAutoLayout,
+  onAlignTables,
+  onDistributeTables,
   onOpenTemplatesModal,
   onOpenImportModal,
   onOpenExportModal,
@@ -167,6 +182,105 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <LayoutGrid className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAutoLayout();
+        onClose();
+      },
+    });
+
+    const targetTableIdsForAlign = selectedTableIds.length >= 2 ? selectedTableIds : tables.map((t) => t.id);
+    const targetScopeLabel = selectedTableIds.length >= 2 ? `${selectedTableIds.length} tabel terpilih` : 'seluruh tabel';
+
+    items.push({
+      id: 'cmd-align-left',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Sisi Kiri (Align Left)',
+      subtitle: `Sejajarkan koordinat X ke paling kiri (${targetScopeLabel})`,
+      icon: <AlignStartHorizontal className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('left', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-align-center',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Tengah Horizontal (Align Center)',
+      subtitle: `Sejajarkan titik tengah horizontal (${targetScopeLabel})`,
+      icon: <AlignCenterHorizontal className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('center', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-align-right',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Sisi Kanan (Align Right)',
+      subtitle: `Sejajarkan koordinat X ke paling kanan (${targetScopeLabel})`,
+      icon: <AlignEndHorizontal className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('right', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-align-top',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Sisi Atas (Align Top)',
+      subtitle: `Sejajarkan koordinat Y ke paling atas (${targetScopeLabel})`,
+      icon: <AlignStartVertical className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('top', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-align-middle',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Tengah Vertikal (Align Middle)',
+      subtitle: `Sejajarkan titik tengah vertikal (${targetScopeLabel})`,
+      icon: <AlignCenterVertical className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('middle', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-align-bottom',
+      category: 'commands',
+      title: 'Ratakan Tabel ke Sisi Bawah (Align Bottom)',
+      subtitle: `Sejajarkan koordinat Y ke paling bawah (${targetScopeLabel})`,
+      icon: <AlignEndVertical className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onAlignTables?.('bottom', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-distribute-horizontal',
+      category: 'commands',
+      title: 'Ratakan Jarak Spasi Horizontal (Distribute Horizontally)',
+      subtitle: `Seragamkan jarak spasi mendatar antar tabel (${targetScopeLabel})`,
+      icon: <AlignHorizontalSpaceBetween className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onDistributeTables?.('horizontal', targetTableIdsForAlign);
+        onClose();
+      },
+    });
+
+    items.push({
+      id: 'cmd-distribute-vertical',
+      category: 'commands',
+      title: 'Ratakan Jarak Spasi Vertikal (Distribute Vertically)',
+      subtitle: `Seragamkan jarak spasi tegak antar tabel (${targetScopeLabel})`,
+      icon: <AlignVerticalSpaceBetween className="w-4 h-4 text-sky-400" />,
+      onSelect: () => {
+        onDistributeTables?.('vertical', targetTableIdsForAlign);
         onClose();
       },
     });
