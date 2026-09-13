@@ -106,8 +106,8 @@ export const confirmDialog = async (options: {
     icon: options.isDangerous ? 'warning' : 'question',
     iconColor: options.isDangerous ? '#f43f5e' : light ? '#0284c7' : '#38bdf8',
     showCancelButton: true,
-    confirmButtonText: options.confirmText || 'Ya, Lanjutkan',
-    cancelButtonText: options.cancelText || 'Batal',
+    confirmButtonText: options.confirmText || 'Yes, Continue',
+    cancelButtonText: options.cancelText || 'Cancel',
     reverseButtons: true,
     customClass: {
       popup: light
@@ -152,15 +152,15 @@ export const promptDialog = async (options: {
     text: options.text,
     input: 'text',
     inputValue: options.inputValue || '',
-    inputPlaceholder: options.inputPlaceholder || 'Masukkan nama baru...',
+    inputPlaceholder: options.inputPlaceholder || 'Enter new name...',
     showCancelButton: true,
-    confirmButtonText: options.confirmText || 'Ya, Ubah',
-    cancelButtonText: options.cancelText || 'Batal',
+    confirmButtonText: options.confirmText || 'Yes, Rename',
+    cancelButtonText: options.cancelText || 'Cancel',
     reverseButtons: true,
     inputValidator: (value) => {
       const trimmed = (value || '').trim();
       if (!trimmed) {
-        return 'Nama tidak boleh kosong!';
+        return 'Name cannot be empty!';
       }
       if (options.validate) {
         return options.validate(trimmed);

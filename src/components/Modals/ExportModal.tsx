@@ -86,7 +86,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           ? '4K Super HD'
           : imageScale === 2
           ? 'Retina HD'
-          : 'Standar',
+          : 'Standard',
     };
   }, [bounds, imageScale, imageCropMode]);
 
@@ -116,7 +116,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleCopyCode = async () => {
     await navigator.clipboard.writeText(exportCode);
     setCopiedCode(true);
-    showToast('Code skema berhasil disalin ke clipboard!', 'success');
+    showToast('Schema code copied to clipboard!', 'success');
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
@@ -139,7 +139,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     a.download = `${filename}.${extension}`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`File ${filename}.${extension} berhasil didownload!`, 'success');
+    showToast(`File ${filename}.${extension} downloaded successfully!`, 'success');
   };
 
   const handleExportDiagramImage = async () => {
@@ -164,10 +164,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       a.download = result.filename;
       a.click();
 
-      showToast(`Gambar ${result.filename} (${estimatedDimensions.label}) berhasil didownload!`, 'success');
+      showToast(`Diagram image ${result.filename} (${estimatedDimensions.label}) downloaded successfully!`, 'success');
     } catch (err: any) {
       console.error('Export image error:', err);
-      showToast(err?.message || 'Gagal mengekspor gambar diagram', 'error');
+      showToast(err?.message || 'Failed to export diagram image', 'error');
     } finally {
       setIsExporting(false);
     }
@@ -193,11 +193,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       );
 
       setCopiedImage(true);
-      showToast('Gambar diagram Super HD berhasil disalin ke clipboard!', 'success');
+      showToast('Super HD diagram image copied to clipboard!', 'success');
       setTimeout(() => setCopiedImage(false), 2500);
     } catch (err: any) {
       console.error('Copy image error:', err);
-      showToast('Gagal menyalin gambar ke clipboard', 'error');
+      showToast('Failed to copy image to clipboard', 'error');
     } finally {
       setIsExporting(false);
     }
@@ -220,7 +220,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Pilih ekspor gambar diagram visual super jernih atau kode skema DDL database
+                Export ultra-crisp visual diagram images or database DDL schema code
               </p>
             </div>
           </div>
@@ -246,7 +246,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             }`}
           >
             <ImageIcon className="w-4 h-4" />
-            <span>Gambar Diagram (Super HD)</span>
+            <span>Diagram Image (Super HD)</span>
             <span className="text-[9px] font-mono uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">
               Auto Framing
             </span>
@@ -262,7 +262,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             }`}
           >
             <FileCode2 className="w-4 h-4" />
-            <span>Script Skema DDL & JSON</span>
+            <span>DDL Schema Script & JSON</span>
           </button>
         </div>
 
@@ -281,8 +281,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Membingkai otomatis seluruh {tables.length} tabel & {relations.length} relasi dengan margin presisi
-                    80px.
+                    Auto-frames all {tables.length} tables & {relations.length} relations with a precision 80px margin.
                   </div>
                 </div>
               </div>
@@ -298,14 +297,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <div className="space-y-2">
                 <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                   <Maximize2 className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                  Kerapatan Resolusi (Scale DPI)
+                  Resolution Scale (Scale DPI)
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { scale: 1, label: '1x Standar', desc: 'Ukuran web standar' },
-                    { scale: 2, label: '2x Retina HD', desc: 'Jernih untuk layar HD' },
-                    { scale: 3, label: '3x Super HD (4K)', desc: 'Sangat jernih & tajam', recommended: true },
-                    { scale: 4, label: '4x Ultra HD (8K)', desc: 'Maksimal untuk cetak' },
+                    { scale: 1, label: '1x Standard', desc: 'Standard web size' },
+                    { scale: 2, label: '2x Retina HD', desc: 'Crisp for HD displays' },
+                    { scale: 3, label: '3x Super HD (4K)', desc: 'Ultra crisp & sharp', recommended: true },
+                    { scale: 4, label: '4x Ultra HD (8K)', desc: 'Maximum print quality' },
                   ].map((s) => (
                     <button
                       key={s.scale}
@@ -333,13 +332,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <div className="space-y-2">
                 <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                  Format Berkas Gambar
+                  Image File Format
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { id: 'png', label: 'PNG Image', desc: 'Raster tajam / transparan' },
-                    { id: 'svg', label: 'SVG Vector', desc: 'Vektor tak terbatas' },
-                    { id: 'jpeg', label: 'JPEG Image', desc: 'File lebih hemat' },
+                    { id: 'png', label: 'PNG Image', desc: 'Sharp raster / transparency' },
+                    { id: 'svg', label: 'SVG Vector', desc: 'Infinitely scalable vector' },
+                    { id: 'jpeg', label: 'JPEG Image', desc: 'Smaller file size' },
                   ].map((fmt) => (
                     <button
                       key={fmt.id}
@@ -362,17 +361,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <div className="space-y-2">
                 <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                   <Palette className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                  Latar Belakang (Background Canvas)
+                  Canvas Background
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { id: 'current', label: 'Tema Saat Ini', desc: 'Otomatis Gelap / Terang' },
-                    { id: 'dark', label: 'Dark Slate 950', desc: 'Latar gelap pekat (#020617)' },
-                    { id: 'light', label: 'Clean Light', desc: 'Latar putih cerah (#ffffff)' },
+                    { id: 'current', label: 'Current Theme', desc: 'Auto Dark / Light' },
+                    { id: 'dark', label: 'Dark Slate 950', desc: 'Deep dark background (#020617)' },
+                    { id: 'light', label: 'Clean Light', desc: 'Bright white background (#ffffff)' },
                     {
                       id: 'transparent',
-                      label: 'Transparan',
-                      desc: 'Tanpa latar (khusus PNG/SVG)',
+                      label: 'Transparent',
+                      desc: 'No background (PNG/SVG only)',
                       disabled: imageFormat === 'jpeg',
                     },
                   ].map((bg) => (
@@ -400,19 +399,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <div className="space-y-2">
                 <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                   <Crop className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                  Cakupan Area Ekspor
+                  Export Area Crop
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
                     {
                       id: 'all',
-                      label: 'Seluruh Diagram (Auto)',
-                      desc: 'Otomatis membingkai semua tabel & relasi',
+                      label: 'Entire Diagram (Auto)',
+                      desc: 'Auto-frame all tables & relations',
                     },
                     {
                       id: 'viewport',
-                      label: 'Kamera Layar Saat Ini',
-                      desc: 'Persis posisi pan & zoom layar sekarang',
+                      label: 'Current Viewport',
+                      desc: 'Exact current screen pan & zoom',
                     },
                   ].map((cm) => (
                     <button
@@ -437,11 +436,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                    Efek Bayangan Kartu (Card Shadow)
+                    Card Shadow Effect
                   </label>
                   {imageBgMode === 'transparent' && (
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">
-                      Otomatis Flat (Bebas Halo Transparan)
+                      Auto Flat (No Transparent Halo)
                     </span>
                   )}
                 </div>
@@ -456,13 +455,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     }`}
                   >
                     <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] flex items-center justify-between">
-                      <span>Flat & Bersih (Tanpa Shadow)</span>
+                      <span>Flat & Clean (No Shadow)</span>
                       <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
                         Crisp
                       </span>
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      Tepi tabel tegas & tajam 100%, tanpa halo abu-abu/hitam di latar transparan maupun solid.
+                      100% crisp table borders without gray/black halo on transparent or solid backgrounds.
                     </div>
                   </button>
 
@@ -479,10 +478,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     }`}
                   >
                     <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
-                      Soft Elevation (Bayangan Halus)
+                      Soft Elevation (Subtle Shadow)
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      Kedalaman 3D lembut pada tabel (hanya direkomendasikan untuk latar Dark/Light solid).
+                      Subtle 3D table depth (recommended only for solid Dark/Light backgrounds).
                     </div>
                   </button>
                 </div>
@@ -496,10 +495,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   <Boxes className="w-4 h-4 text-sky-500 dark:text-sky-400" />
                   <div>
                     <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                      Tampilkan Bingkai Grup Modul
+                      Show Module Group Frames
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                      Sertakan kotak grouping dan nama domain modul ({groups.length} grup aktif).
+                      Include grouping boxes and domain names ({groups.length} active groups).
                     </div>
                   </div>
                 </div>
@@ -519,7 +518,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                 <EyeOff className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 <span>
-                  <strong>Clean Export Engine Aktif:</strong> Tombol editor (+ tambah kolom, tombol hapus, pegangan drag, dan bulatan port relasi) otomatis disembunyikan untuk menghasilkan gambar arsitektur yang bersih.
+                  <strong>Clean Export Engine Active:</strong> Editor controls (+ add column, delete button, drag handles, and relation port dots) are automatically hidden to produce clean architectural diagrams.
                 </span>
               </div>
             </div>
@@ -563,7 +562,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {/* Modal Footer */}
         <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
           <div className="text-[11px] text-slate-500 font-mono">
-            {tables.length} tabel • {relations.length} relasi {groups.length > 0 && `• ${groups.length} grup`}
+            {tables.length} tables • {relations.length} relations {groups.length > 0 && `• ${groups.length} groups`}
           </div>
 
           <div className="flex items-center gap-2">
@@ -575,17 +574,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   disabled={isExporting}
                   onClick={handleCopyDiagramToClipboard}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                  title="Salin gambar PNG ke clipboard untuk langsung di-paste ke aplikasi lain"
+                  title="Copy PNG image to clipboard for instant pasting"
                 >
                   {copiedImage ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-emerald-600 dark:text-emerald-400">Gambar Tersalin!</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">Image Copied!</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                      <span>Salin ke Clipboard</span>
+                      <span>Copy to Clipboard</span>
                     </>
                   )}
                 </button>
@@ -600,12 +599,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   {isExporting ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Sedang Merender...</span>
+                      <span>Rendering...</span>
                     </>
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download Gambar ({imageFormat.toUpperCase()})</span>
+                      <span>Download Image ({imageFormat.toUpperCase()})</span>
                     </>
                   )}
                 </button>
@@ -621,12 +620,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   {copiedCode ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-emerald-600 dark:text-emerald-400">Tersalin!</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                      <span>Salin Code</span>
+                      <span>Copy Code</span>
                     </>
                   )}
                 </button>
@@ -638,7 +637,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-sky-500/20 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download File Script</span>
+                  <span>Download Script File</span>
                 </button>
               </>
             )}

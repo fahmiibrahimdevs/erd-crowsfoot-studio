@@ -51,28 +51,28 @@ export const SqlImportModal: React.FC<SqlImportModalProps> = ({
   const handleImport = () => {
     setError(null);
     if (!sqlText.trim()) {
-      setError('Silakan masukkan script SQL DDL terlebih dahulu.');
+      setError('Please enter a SQL DDL script first.');
       return;
     }
 
     try {
       const { tables, relations } = parseSqlDdl(sqlText);
       if (tables.length === 0) {
-        setError('Tidak ditemukan statement CREATE TABLE yang valid dalam script.');
+        setError('No valid CREATE TABLE statements found in script.');
         return;
       }
       onImport(tables, relations);
-      showToast(`Berhasil mengimpor ${tables.length} tabel & ${relations.length} relasi!`, 'success');
+      showToast(`Successfully imported ${tables.length} tables & ${relations.length} relations!`, 'success');
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Gagal memproses script SQL.');
+      setError(err.message || 'Failed to parse SQL script.');
     }
   };
 
   const handleLoadSample = () => {
     setSqlText(SAMPLE_SQL);
     setError(null);
-    showToast('Contoh script SQL dimuat', 'info');
+    showToast('Sample SQL script loaded', 'info');
   };
 
   return (
@@ -89,7 +89,7 @@ export const SqlImportModal: React.FC<SqlImportModalProps> = ({
                 Import SQL DDL Script
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Tempel script CREATE TABLE untuk mengenerate diagram otomatis
+                Paste CREATE TABLE scripts to automatically generate ER diagram
               </p>
             </div>
           </div>
@@ -106,14 +106,14 @@ export const SqlImportModal: React.FC<SqlImportModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-3 flex-1 flex flex-col">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-              Script SQL (PostgreSQL, MySQL, SQLite)
+              SQL Script (PostgreSQL, MySQL, SQLite)
             </span>
             <button
               onClick={handleLoadSample}
               className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 font-medium cursor-pointer"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Gunakan Contoh SQL</span>
+              <span>Load Sample SQL</span>
             </button>
           </div>
 
@@ -141,13 +141,13 @@ export const SqlImportModal: React.FC<SqlImportModalProps> = ({
             onClick={onClose}
             className="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-colors cursor-pointer"
           >
-            Batal
+            Cancel
           </button>
           <button
             onClick={handleImport}
             className="px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-semibold transition-all shadow-md shadow-sky-500/20 cursor-pointer"
           >
-            Parse & Render ke Canvas
+            Parse & Render to Canvas
           </button>
         </div>
       </div>

@@ -81,7 +81,7 @@ export const App: React.FC = () => {
   const handleToggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
-      showToast(`Mode tampilan diubah ke ${next === 'dark' ? 'Dark Mode' : 'Light Mode'}`, 'info');
+      showToast(`Switched to ${next === 'dark' ? 'Dark Mode' : 'Light Mode'}`, 'info');
       return next;
     });
   }, []);
@@ -141,8 +141,8 @@ export const App: React.FC = () => {
       localStorage.setItem(ROUTING_STYLE_KEY, style);
     } catch {}
     showToast(
-      `Gaya garis diubah ke ${
-        style === 'smoothstep' ? 'Siku 90°' : style === 'bezier' ? 'Kurva Bezier' : 'Garis Lurus'
+      `Edge routing style set to ${
+        style === 'smoothstep' ? 'Orthogonal (90°)' : style === 'bezier' ? 'Bezier Curve' : 'Straight'
       }`,
       'info'
     );
@@ -270,7 +270,7 @@ export const App: React.FC = () => {
           }))
         );
       }
-      showToast('Undo berhasil', 'info');
+      showToast('Undo successful', 'info');
     }
   }, [historyUndo, setNodes]);
 
@@ -285,7 +285,7 @@ export const App: React.FC = () => {
           }))
         );
       }
-      showToast('Redo berhasil', 'info');
+      showToast('Redo successful', 'info');
     }
   }, [historyRedo, setNodes]);
 
@@ -326,6 +326,7 @@ export const App: React.FC = () => {
     handleReorderColumns,
     handleSortTableColumns,
     handleSortMultipleTablesColumns,
+    handleAutoColorDomains,
     handleCopySql,
     handleConnect,
     handleGenerateJunctionTable,
@@ -333,6 +334,7 @@ export const App: React.FC = () => {
     tables,
     tablesRef,
     relations,
+    groups,
     dialect,
     historyPositions: historyState.positions,
     getNodePositions,
@@ -471,7 +473,7 @@ export const App: React.FC = () => {
     } else {
       handleFitView();
     }
-    showToast('Mode Presentasi Aktif (Tekan Esc untuk keluar)', 'info');
+    showToast('Presentation Mode Active (Press Esc to exit)', 'info');
   }, [tables, selectedTableId, handleNavigateToTable, handleFitView, setSelectedGroupId, setSelectedRelationId]);
 
   const handleExitPresentation = useCallback(() => {
@@ -835,7 +837,7 @@ export const App: React.FC = () => {
                   (t) => t.id !== updated.id && t.name.toLowerCase() === cleanName
                 );
                 if (isDuplicate) {
-                  showToast(`Nama tabel "${cleanName}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`, 'error');
+                  showToast(`Table name "${cleanName}" is already used by another table! Please choose a different name.`, 'error');
                   return;
                 }
               }
@@ -854,6 +856,7 @@ export const App: React.FC = () => {
                 handleSortMultipleTablesColumns(selectedTableIds.length > 0 ? selectedTableIds : undefined);
               }
             }}
+            onAutoColorDomains={(scopeIds) => handleAutoColorDomains(scopeIds)}
             onCreateGroup={handleCreateGroup}
             onUngroup={handleUngroup}
             onRenameGroup={handleRenameGroup}
@@ -936,6 +939,7 @@ export const App: React.FC = () => {
         onDistributeTables={handleDistributeTables}
         onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
         onSortColumns={(scopeIds) => handleSortMultipleTablesColumns(scopeIds)}
+        onAutoColorDomains={(scopeIds) => handleAutoColorDomains(scopeIds)}
         onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
         onOpenImportModal={() => setIsImportOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
@@ -982,6 +986,7 @@ export const App: React.FC = () => {
         onDistributeTables={handleDistributeTables}
         onTidyOverlaps={(scopeIds) => handleTidyOverlaps(scopeIds)}
         onSortColumns={(scopeIds) => handleSortMultipleTablesColumns(scopeIds)}
+        onAutoColorDomains={(scopeIds) => handleAutoColorDomains(scopeIds)}
         onAddColumn={handleAddColumnToTable}
         onCopySql={handleCopySql}
         onRenameGroup={handleRenameGroup}

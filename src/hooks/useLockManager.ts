@@ -41,8 +41,8 @@ export function useLockManager(groupsRef: React.MutableRefObject<ErdGroup[]>) {
             nodeIds.length === 1 && groupsRef.current.some((g) => g.id === nodeIds[0]);
           showToast(
             isSingleGroup
-              ? 'Grup dan seluruh tabel di dalamnya telah dibuka kuncinya (Unlocked)'
-              : `Kunci posisi ${nodeIds.length} elemen telah dibuka (Unlocked)`,
+              ? 'Group and its member tables unlocked'
+              : `Unlocked ${nodeIds.length} elements`,
             'info'
           );
         } else {
@@ -52,8 +52,8 @@ export function useLockManager(groupsRef: React.MutableRefObject<ErdGroup[]>) {
             nodeIds.length === 1 && groupsRef.current.some((g) => g.id === nodeIds[0]);
           showToast(
             isSingleGroup
-              ? 'Grup dan seluruh tabel di dalamnya telah dikunci (Locked)'
-              : `Posisi ${nodeIds.length} elemen telah dikunci (Locked)`,
+              ? 'Group and its member tables locked'
+              : `Locked ${nodeIds.length} elements`,
             'info'
           );
         }

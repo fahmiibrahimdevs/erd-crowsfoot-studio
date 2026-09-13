@@ -166,7 +166,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     const trimmed = editingName.trim();
     if (trimmed && trimmed.length > 0) {
       onRenameItem(itemId, trimmed);
-      showToast('Nama berhasil diubah', 'info');
+      showToast('Name updated successfully', 'info');
     }
     setEditingItemId(null);
   };
@@ -201,17 +201,17 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
     setContextMenu((prev) => ({ ...prev, isOpen: false }));
     const isFolder = item.type === 'folder';
     const confirmed = await confirmDialog({
-      title: isFolder ? 'Hapus Folder?' : 'Hapus File ERD?',
+      title: isFolder ? 'Delete Folder?' : 'Delete ERD File?',
       text: isFolder
-        ? `Folder "${item.name}" beserta seluruh diagram di dalamnya akan dihapus.`
-        : `File diagram "${item.name}" akan dihapus dari workspace.`,
-      confirmText: 'Ya, Hapus',
+        ? `Folder "${item.name}" and all diagrams within it will be deleted.`
+        : `Diagram file "${item.name}" will be deleted from the workspace.`,
+      confirmText: 'Yes, Delete',
       isDangerous: true,
     });
 
     if (confirmed) {
       onDeleteItem(item.id);
-      showToast(`${isFolder ? 'Folder' : 'File'} "${item.name}" telah dihapus`, 'info');
+      showToast(`${isFolder ? 'Folder' : 'File'} "${item.name}" deleted`, 'info');
     }
   };
 
@@ -439,7 +439,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   type="button"
-                  title="Tambah File di Folder Ini"
+                  title="New File in this Folder"
                   onClick={(e) => handleStartCreate('file', item.id, e)}
                   className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
                 >
@@ -447,7 +447,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                 </button>
                 <button
                   type="button"
-                  title="Menu Opsi Folder"
+                  title="Folder Options"
                   onClick={(e) => openItemMenuFromButton(e, 'folder', item)}
                   className={`p-1 rounded transition-colors cursor-pointer ${
                     isItemContextActive
@@ -487,7 +487,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                       if (e.key === 'Enter') handleSaveCreate();
                       if (e.key === 'Escape') setIsCreatingNew(null);
                     }}
-                    placeholder={isCreatingNew.type === 'folder' ? 'Nama folder...' : 'nama_file.erd'}
+                    placeholder={isCreatingNew.type === 'folder' ? 'Folder name...' : 'file_name.erd'}
                     className="px-1.5 py-0.5 bg-white dark:bg-slate-950 border border-sky-500 rounded text-xs text-slate-900 dark:text-slate-100 outline-none w-full"
                   />
                 </div>
@@ -573,7 +573,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
 
             <button
               type="button"
-              title="Menu Opsi File"
+              title="File Options"
               onClick={(e) => openItemMenuFromButton(e, 'file', file)}
               className={`p-1 rounded transition-all cursor-pointer ${
                 isItemContextActive
@@ -595,13 +595,13 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           <Layers className="w-3.5 h-3.5 text-sky-500" />
-          <span>Explorer Project</span>
+          <span>Project Explorer</span>
         </div>
 
         <div className="flex items-center gap-1">
           <button
             type="button"
-            title="Tambah File ERD Baru"
+            title="New ERD File"
             onClick={(e) => handleStartCreate('file', null, e)}
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
           >
@@ -609,7 +609,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
           </button>
           <button
             type="button"
-            title="Tambah Folder Baru"
+            title="New Folder"
             onClick={(e) => handleStartCreate('folder', null, e)}
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
           >
@@ -617,7 +617,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
           </button>
           <button
             type="button"
-            title="Upload File .erd"
+            title="Upload .erd File"
             onClick={() => fileInputRef.current?.click()}
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
           >
@@ -639,7 +639,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
           <Search className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Cari file atau folder..."
+            placeholder="Search files or folders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 transition-colors"
@@ -673,13 +673,13 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
         {rootItems.length === 0 && !isCreatingNew ? (
           <div className="py-8 text-center text-slate-600 dark:text-slate-400 text-xs flex flex-col items-center gap-2">
             <FileCode2 className="w-8 h-8 opacity-40 text-slate-500" />
-            <span>Belum ada file diagram</span>
+            <span>No diagram files yet</span>
             <button
               onClick={() => handleStartCreate('file', null)}
               className="mt-1 px-3 py-1 bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 border border-sky-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-3 h-3" />
-              <span>Buat File ERD</span>
+              <span>Create ERD File</span>
             </button>
           </div>
         ) : (
@@ -704,7 +704,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                     if (e.key === 'Enter') handleSaveCreate();
                     if (e.key === 'Escape') setIsCreatingNew(null);
                   }}
-                  placeholder={isCreatingNew.type === 'folder' ? 'Nama folder...' : 'nama_file.erd'}
+                  placeholder={isCreatingNew.type === 'folder' ? 'Folder name...' : 'file_name.erd'}
                   className="px-1.5 py-0.5 bg-white dark:bg-slate-950 border border-sky-500 rounded text-xs text-slate-900 dark:text-slate-100 outline-none w-full"
                 />
               </div>
@@ -740,7 +740,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                     : 'border-slate-300 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/40 text-slate-500 hover:border-sky-500/40'
                 }`}
               >
-                <span>Lepaskan di sini untuk memindahkan ke Root (Luar Folder)</span>
+                <span>Drop here to move to Root (Outside Folder)</span>
               </div>
             )}
           </>
@@ -787,7 +787,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
               <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center gap-2">
                 <Layers className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                 <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
-                  Explorer Workspace
+                  Workspace Explorer
                 </span>
               </div>
             )}
@@ -806,7 +806,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-sky-500" />
-                  <span>Buka Diagram</span>
+                  <span>Open Diagram</span>
                 </button>
 
                 <button
@@ -819,7 +819,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Ganti Nama (Rename)</span>
+                  <span>Rename</span>
                 </button>
 
                 <button
@@ -833,7 +833,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Copy className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Duplikat File</span>
+                  <span>Duplicate File</span>
                 </button>
 
                 <button
@@ -862,7 +862,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Hapus File</span>
+                  <span>Delete File</span>
                 </button>
               </div>
             )}
@@ -880,7 +880,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <FilePlus className="w-3.5 h-3.5 text-sky-500" />
-                  <span>File Baru di Folder Ini</span>
+                  <span>New File in Folder</span>
                 </button>
 
                 <button
@@ -893,7 +893,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Subfolder Baru</span>
+                  <span>New Subfolder</span>
                 </button>
 
                 <button
@@ -909,12 +909,12 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   {expandedFolderIds.has(contextMenu.targetItem.id) ? (
                     <>
                       <Folder className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Tutup Folder</span>
+                      <span>Collapse Folder</span>
                     </>
                   ) : (
                     <>
                       <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Buka Folder</span>
+                      <span>Expand Folder</span>
                     </>
                   )}
                 </button>
@@ -929,7 +929,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Ganti Nama (Rename)</span>
+                  <span>Rename</span>
                 </button>
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
@@ -944,7 +944,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Hapus Folder</span>
+                  <span>Delete Folder</span>
                 </button>
               </div>
             )}
@@ -958,7 +958,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <FilePlus className="w-3.5 h-3.5 text-sky-500" />
-                  <span>Buat File ERD Baru</span>
+                  <span>New ERD File</span>
                 </button>
 
                 <button
@@ -967,7 +967,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Buat Folder Baru</span>
+                  <span>New Folder</span>
                 </button>
 
                 <button
@@ -990,7 +990,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <ChevronsDown className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Buka Semua Folder</span>
+                  <span>Expand All Folders</span>
                 </button>
 
                 <button
@@ -999,7 +999,7 @@ export const ProjectExplorer: React.FC<ProjectExplorerProps> = ({
                   className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <ChevronsRight className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Tutup Semua Folder</span>
+                  <span>Collapse All Folders</span>
                 </button>
               </div>
             )}

@@ -149,7 +149,7 @@ export function useKeyboardShortcuts({
             (prev: any[]) => prev.filter((r) => r.id !== relId)
           );
           setSelectedRelationId(null);
-          showToast('Relasi foreign key berhasil dihapus', 'info');
+          showToast('Foreign key relationship deleted', 'info');
           return;
         }
 
@@ -159,9 +159,9 @@ export function useKeyboardShortcuts({
           const groupToDelete = groups.find((g) => g.id === selectedGroupId);
           if (groupToDelete) {
             confirmDialog({
-              title: `Hapus Grup "${groupToDelete.name}"?`,
-              text: `Apakah Anda yakin ingin menghapus grup beserta seluruh ${groupToDelete.tableIds.length} tabel di dalamnya?`,
-              confirmText: 'Ya, Hapus Grup & Tabel',
+              title: `Delete Group "${groupToDelete.name}"?`,
+              text: `Are you sure you want to delete this group and all ${groupToDelete.tableIds.length} tables inside it?`,
+              confirmText: 'Yes, Delete Group & Tables',
               isDangerous: true,
             }).then((confirmed) => {
               if (confirmed) {
@@ -176,9 +176,9 @@ export function useKeyboardShortcuts({
         if (selectedTableIds.length > 1) {
           e.preventDefault();
           confirmDialog({
-            title: `Hapus ${selectedTableIds.length} Tabel?`,
-            text: `Apakah Anda yakin ingin menghapus ${selectedTableIds.length} tabel yang dipilih beserta seluruh relasinya?`,
-            confirmText: 'Ya, Hapus Semua',
+            title: `Delete ${selectedTableIds.length} Tables?`,
+            text: `Are you sure you want to delete ${selectedTableIds.length} selected tables and all their relations?`,
+            confirmText: 'Yes, Delete All',
             isDangerous: true,
           }).then((confirmed) => {
             if (confirmed) {
@@ -195,14 +195,14 @@ export function useKeyboardShortcuts({
           const targetTable = tables.find((t) => t.id === tableId);
           if (targetTable) {
             confirmDialog({
-              title: 'Hapus Tabel?',
-              text: `Apakah Anda yakin ingin menghapus tabel "${targetTable.name}" beserta seluruh relasinya?`,
-              confirmText: 'Ya, Hapus Tabel',
+              title: 'Delete Table?',
+              text: `Are you sure you want to delete table "${targetTable.name}" and all its relations?`,
+              confirmText: 'Yes, Delete Table',
               isDangerous: true,
             }).then((confirmed) => {
               if (confirmed) {
                 handleDeleteTable(tableId);
-                showToast(`Tabel "${targetTable.name}" telah dihapus`, 'info');
+                showToast(`Table "${targetTable.name}" deleted`, 'info');
               }
             });
           }

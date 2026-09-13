@@ -30,6 +30,7 @@ import {
   AlignVerticalSpaceBetween,
   Wand2,
   ArrowUpDown,
+  Palette,
 } from 'lucide-react';
 import {
   TableData,
@@ -70,6 +71,7 @@ interface InspectorProps {
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onTidyOverlaps?: (tableIds?: string[]) => void;
   onSortColumns?: (tableId?: string) => void;
+  onAutoColorDomains?: (tableIds?: string[]) => void;
   onCreateGroup?: (tableIds: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onRenameGroup?: (groupId: string, newName: string) => void;
@@ -100,6 +102,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onDistributeTables,
   onTidyOverlaps,
   onSortColumns,
+  onAutoColorDomains,
   onCreateGroup,
   onUngroup,
   onRenameGroup,
@@ -136,9 +139,9 @@ export const Inspector: React.FC<InspectorProps> = ({
 
     const handleDeleteGroupClick = async () => {
       const confirmed = await confirmDialog({
-        title: `Hapus Grup "${selectedGroup.name}"?`,
-        text: `Apakah Anda yakin ingin menghapus grup ini beserta seluruh ${groupTables.length} tabel di dalamnya?`,
-        confirmText: 'Ya, Hapus Grup & Tabel',
+        title: `Delete Group "${selectedGroup.name}"?`,
+        text: `Are you sure you want to delete this group and all ${groupTables.length} tables inside it?`,
+        confirmText: 'Yes, Delete Group & Tables',
         isDangerous: true,
       });
       if (confirmed) {
@@ -156,10 +159,10 @@ export const Inspector: React.FC<InspectorProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-100">
-                Grup Modul
+                Module Group
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                {groupTables.length} tabel di dalam grup
+                {groupTables.length} {groupTables.length === 1 ? 'table' : 'tables'} in group
               </p>
             </div>
           </div>
@@ -176,7 +179,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Group Name */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Nama Grup
+              Group Name
             </label>
             {isEditingGroupName ? (
               <form onSubmit={handleSaveGroupName} className="flex items-center gap-1.5">
@@ -214,7 +217,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Color Tag */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Tag Warna Grup
+              Group Color Tag
             </label>
             <div className="flex items-center gap-2 flex-wrap p-2.5 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl">
               {TABLE_COLOR_PRESETS.map((preset) => (
@@ -236,7 +239,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Tables inside group */}
           <div className="space-y-2">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Tabel Anggota ({groupTables.length})
+              Member Tables ({groupTables.length})
             </label>
             <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl">
               {groupTables.map((t) => (
@@ -269,12 +272,12 @@ export const Inspector: React.FC<InspectorProps> = ({
                 {lockedNodeIds.includes(selectedGroup.id) ? (
                   <>
                     <Unlock className="w-4 h-4 text-amber-500" />
-                    <span>Buka Kunci Posisi Grup (Unlock)</span>
+                    <span>Unlock Group Position</span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4 text-amber-500" />
-                    <span>Kunci Posisi Seluruh Grup (Lock)</span>
+                    <span>Lock Group Position</span>
                   </>
                 )}
               </button>
@@ -285,7 +288,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2.5 px-3 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <Unlock className="w-4 h-4 text-sky-500" />
-              <span>Bubarkan Grup (Ungroup)</span>
+              <span>Ungroup</span>
             </button>
 
             <button
@@ -293,7 +296,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2.5 px-3 bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Hapus Grup & Seluruh Tabel</span>
+              <span>Delete Group & All Tables</span>
             </button>
           </div>
         </div>
@@ -305,9 +308,9 @@ export const Inspector: React.FC<InspectorProps> = ({
   if (selectedTables.length > 1 && !selectedRelation) {
     const handleBatchDelete = async () => {
       const confirmed = await confirmDialog({
-        title: `Hapus ${selectedTables.length} Tabel?`,
-        text: `Apakah Anda yakin ingin menghapus ${selectedTables.length} tabel yang dipilih beserta seluruh relasinya?`,
-        confirmText: `Ya, Hapus Semua`,
+        title: `Delete ${selectedTables.length} Tables?`,
+        text: `Are you sure you want to delete the ${selectedTables.length} selected tables and all their relationships?`,
+        confirmText: `Yes, Delete All`,
         isDangerous: true,
       });
 
@@ -333,7 +336,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 Multi-Selection
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                {selectedTables.length} tabel terpilih
+                {selectedTables.length} tables selected
               </p>
             </div>
           </div>
@@ -352,14 +355,14 @@ export const Inspector: React.FC<InspectorProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
                 <Boxes className="w-3.5 h-3.5" />
-                <span>Fitur Grouping</span>
+                <span>Grouping</span>
               </span>
               <span className="text-[10px] font-mono text-sky-600/80 dark:text-sky-400/80 bg-sky-500/15 px-1.5 py-0.5 rounded border border-sky-500/30">
                 Ctrl + G
               </span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-              Kunci tabel-tabel ini ke dalam satu grup agar garis relasi internal terkunci rapi saat dipindahkan bersamaan.
+              Group these tables together to lock internal relationship lines when moving.
             </p>
             <button
               type="button"
@@ -367,14 +370,14 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2.5 px-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-sky-500/20 active:scale-98"
             >
               <Boxes className="w-4 h-4" />
-              <span>Gabungkan Jadi Grup (Group)</span>
+              <span>Group Selection (Ctrl+G)</span>
             </button>
           </div>
 
           {/* Selected Tables Chips */}
           <div className="space-y-2">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Daftar Tabel Terpilih
+              Selected Tables
             </label>
             <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl">
               {selectedTables.map((t) => (
@@ -389,7 +392,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   <span className="truncate max-w-[130px]">{t.name}</span>
                   <button
                     type="button"
-                    title={`Keluarkan ${t.name} dari seleksi`}
+                    title={`Remove ${t.name} from selection`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDeselectTable?.(t.id);
@@ -407,10 +410,10 @@ export const Inspector: React.FC<InspectorProps> = ({
           <div className="p-3 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5">
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-1">
-                Perataan Posisi (Alignment)
+                Position Alignment
               </label>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2">
-                Selaraskan koordinat tabel terpilih dalam satu garis.
+                Align coordinates of selected tables along a single axis.
               </p>
             </div>
 
@@ -422,30 +425,30 @@ export const Inspector: React.FC<InspectorProps> = ({
               <div className="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
-                  title="Rata Kiri (Align Left)"
+                  title="Align Left"
                   onClick={() => onAlignTables?.('left', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignStartHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Kiri</span>
+                  <span className="text-[11px] font-medium">Left</span>
                 </button>
                 <button
                   type="button"
-                  title="Rata Tengah Horizontal (Align Center)"
+                  title="Align Center"
                   onClick={() => onAlignTables?.('center', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignCenterHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Tengah</span>
+                  <span className="text-[11px] font-medium">Center</span>
                 </button>
                 <button
                   type="button"
-                  title="Rata Kanan (Align Right)"
+                  title="Align Right"
                   onClick={() => onAlignTables?.('right', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignEndHorizontal className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Kanan</span>
+                  <span className="text-[11px] font-medium">Right</span>
                 </button>
               </div>
             </div>
@@ -453,35 +456,35 @@ export const Inspector: React.FC<InspectorProps> = ({
             {/* Vertical Alignment */}
             <div className="space-y-1">
               <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Vertikal
+                Vertical
               </span>
               <div className="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
-                  title="Rata Atas (Align Top)"
+                  title="Align Top"
                   onClick={() => onAlignTables?.('top', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignStartVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Atas</span>
+                  <span className="text-[11px] font-medium">Top</span>
                 </button>
                 <button
                   type="button"
-                  title="Rata Tengah Vertikal (Align Middle)"
+                  title="Align Middle"
                   onClick={() => onAlignTables?.('middle', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignCenterVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Tengah</span>
+                  <span className="text-[11px] font-medium">Middle</span>
                 </button>
                 <button
                   type="button"
-                  title="Rata Bawah (Align Bottom)"
+                  title="Align Bottom"
                   onClick={() => onAlignTables?.('bottom', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignEndVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Bawah</span>
+                  <span className="text-[11px] font-medium">Bottom</span>
                 </button>
               </div>
             </div>
@@ -489,12 +492,12 @@ export const Inspector: React.FC<InspectorProps> = ({
             {/* Distribution */}
             <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
               <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Ratakan Jarak Spasi (Distribute)
+                Distribute Spacing
               </span>
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   type="button"
-                  title="Ratakan Jarak Spasi Horizontal"
+                  title="Distribute Horizontal Spacing"
                   onClick={() => onDistributeTables?.('horizontal', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
@@ -503,12 +506,12 @@ export const Inspector: React.FC<InspectorProps> = ({
                 </button>
                 <button
                   type="button"
-                  title="Ratakan Jarak Spasi Vertikal"
+                  title="Distribute Vertical Spacing"
                   onClick={() => onDistributeTables?.('vertical', selectedTables.map((t) => t.id))}
                   className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-sky-500/80 hover:text-sky-500 hover:ring-1 hover:ring-sky-500/30 flex items-center justify-center gap-1.5 text-xs transition-all cursor-pointer shadow-2xs group"
                 >
                   <AlignVerticalSpaceBetween className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
-                  <span className="text-[11px] font-medium">Vertikal</span>
+                  <span className="text-[11px] font-medium">Vertical</span>
                 </button>
               </div>
             </div>
@@ -520,10 +523,10 @@ export const Inspector: React.FC<InspectorProps> = ({
                   type="button"
                   onClick={() => onTidyOverlaps(selectedTables.map((t) => t.id))}
                   className="w-full py-2 px-2.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
-                  title="Pisahkan tabel terpilih jika ada yang bertumpuk"
+                  title="Resolve overlapping tables in selection"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
-                  <span>Rapikan Tabrakan Seleksi (Tidy)</span>
+                  <span>Tidy Overlaps (Selection)</span>
                 </button>
               </div>
             )}
@@ -535,10 +538,10 @@ export const Inspector: React.FC<InspectorProps> = ({
                   type="button"
                   onClick={() => onSortColumns()}
                   className="w-full py-2 px-2.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-sky-500/80 hover:text-sky-600 dark:hover:text-sky-400 hover:ring-1 hover:ring-sky-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
-                  title="Rapikan urutan kolom pada semua tabel terpilih (PK → FK → Atribut → Timestamps)"
+                  title="Sort column order on all selected tables (PK → FK → Attributes → Timestamps)"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5 text-sky-500" />
-                  <span>Rapikan Kolom ({selectedTables.length} Tabel)</span>
+                  <span>Sort Columns ({selectedTables.length} Tables)</span>
                 </button>
               </div>
             )}
@@ -546,9 +549,22 @@ export const Inspector: React.FC<InspectorProps> = ({
 
           {/* Batch Color Preset Palette */}
           <div className="space-y-2">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Ubah Warna Header Bersama
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Header Color
+              </label>
+              {onAutoColorDomains && (
+                <button
+                  type="button"
+                  onClick={() => onAutoColorDomains(selectedTables.map((t) => t.id))}
+                  className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                  title="Auto-color selected tables by shared prefix/domain"
+                >
+                  <Palette className="w-3 h-3" />
+                  <span>Auto-Color Prefix</span>
+                </button>
+              )}
+            </div>
             <div className="flex items-center gap-2 flex-wrap p-2.5 bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl">
               {TABLE_COLOR_PRESETS.map((preset) => (
                 <button
@@ -571,7 +587,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 className="w-full py-2.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <Lock className="w-4 h-4 text-amber-500" />
-                <span>Kunci / Buka Kunci {selectedTables.length} Tabel Terpilih</span>
+                <span>Lock / Unlock {selectedTables.length} Selected Tables</span>
               </button>
             )}
 
@@ -580,7 +596,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2.5 px-3 bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Hapus {selectedTables.length} Tabel Terpilih</span>
+              <span>Delete {selectedTables.length} Selected Tables</span>
             </button>
           </div>
         </div>
@@ -594,7 +610,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         <Sliders className="w-8 h-8 text-slate-400 dark:text-slate-700 mb-3" />
         <p className="font-semibold text-slate-800 dark:text-slate-300 mb-1">Inspector Studio</p>
         <p className="text-slate-500 max-w-[210px] leading-relaxed">
-          Pilih tabel atau klik garis relasi di canvas untuk mengubah kolom, tipe data, kardinalitas, dan foreign key.
+          Select a table or click a relationship line on the canvas to edit columns, data types, cardinality, and foreign keys.
         </p>
       </aside>
     );
@@ -704,7 +720,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       columns: [...selectedTable.columns, newCol],
     });
     setEditingColId(newCol.id);
-    showToast(`Kolom "${newCol.name}" ditambahkan`);
+    showToast(`Column "${newCol.name}" added`);
   };
 
   const handleUpdateColumn = (colId: string, updates: Partial<ColumnData>) => {
@@ -718,46 +734,46 @@ export const Inspector: React.FC<InspectorProps> = ({
   const handleDeleteColumn = async (colId: string, colName: string) => {
     if (!selectedTable) return;
     const confirmed = await confirmDialog({
-      title: 'Hapus Kolom?',
-      text: `Apakah Anda yakin ingin menghapus kolom "${colName}"?`,
-      confirmText: 'Hapus Kolom',
+      title: 'Delete Column?',
+      text: `Are you sure you want to delete column "${colName}"?`,
+      confirmText: 'Delete Column',
       isDangerous: true,
     });
 
     if (confirmed) {
       const updatedColumns = selectedTable.columns.filter((c) => c.id !== colId);
       onUpdateTable({ ...selectedTable, columns: updatedColumns });
-      showToast(`Kolom "${colName}" dihapus`, 'info');
+      showToast(`Column "${colName}" deleted`, 'info');
     }
   };
 
   const handleDeleteTableClick = async () => {
     if (!selectedTable) return;
     const confirmed = await confirmDialog({
-      title: 'Hapus Tabel?',
-      text: `Tabel "${selectedTable.name}" beserta semua kolom dan relasinya akan dihapus permanen.`,
-      confirmText: 'Ya, Hapus Tabel',
+      title: 'Delete Table?',
+      text: `Table "${selectedTable.name}" and all its columns and relationships will be permanently deleted.`,
+      confirmText: 'Yes, Delete Table',
       isDangerous: true,
     });
 
     if (confirmed) {
       onDeleteTable(selectedTable.id);
-      showToast(`Tabel "${selectedTable.name}" dihapus`, 'info');
+      showToast(`Table "${selectedTable.name}" deleted`, 'info');
     }
   };
 
   const handleDeleteRelationClick = async () => {
     if (!selectedRelation) return;
     const confirmed = await confirmDialog({
-      title: 'Hapus Relasi Foreign Key?',
-      text: 'Garis hubungan antar tabel ini akan dilepas dari skema.',
-      confirmText: 'Ya, Hapus Relasi',
+      title: 'Delete Foreign Key Relationship?',
+      text: 'The relationship line between these tables will be removed from schema.',
+      confirmText: 'Yes, Delete Relationship',
       isDangerous: true,
     });
 
     if (confirmed) {
       onDeleteRelation(selectedRelation.id);
-      showToast('Relasi foreign key berhasil dihapus', 'info');
+      showToast('Foreign key relationship deleted', 'info');
     }
   };
 
@@ -787,7 +803,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             <>
               <GitFork className="w-4 h-4 text-sky-500 dark:text-sky-400" />
               <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">
-                Relasi Foreign Key
+                Foreign Key Relationship
               </span>
             </>
           )}
@@ -802,8 +818,8 @@ export const Inspector: React.FC<InspectorProps> = ({
                   onClick={() => onToggleLock([selectedTable.id])}
                   title={
                     lockedNodeIds.includes(selectedTable.id)
-                      ? 'Buka Kunci Posisi (Unlock)'
-                      : 'Kunci Posisi Tabel (Lock)'
+                      ? 'Unlock Table Position'
+                      : 'Lock Table Position'
                   }
                   className={`p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 transition-all cursor-pointer mr-1 ${
                     lockedNodeIds.includes(selectedTable.id)
@@ -817,7 +833,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                     <Unlock className="w-3.5 h-3.5" />
                   )}
                   <span className="text-[11px] hidden sm:inline">
-                    {lockedNodeIds.includes(selectedTable.id) ? 'Terkunci' : 'Kunci'}
+                    {lockedNodeIds.includes(selectedTable.id) ? 'Locked' : 'Lock'}
                   </span>
                 </button>
               )}
@@ -831,7 +847,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  Properti
+                  Properties
                 </button>
                 <button
                   onClick={() => setActiveTab('sql')}
@@ -862,7 +878,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <div className="p-3 bg-slate-50/80 dark:bg-slate-950/70 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                Alur Relasi (Foreign Key)
+                Relationship Flow (FK)
               </span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 font-semibold">
                 {selectedRelation.cardinality}
@@ -906,7 +922,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-sky-500 dark:bg-sky-400 shrink-0" />
                   <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
-                    Tabel 1: {sourceTable?.name || 'Tabel 1'}
+                    Table 1: {sourceTable?.name || 'Table 1'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 truncate max-w-[90px]">
@@ -963,7 +979,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                             : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-[10px]">One Opsional</span>
+                        <span className="text-[10px]">One Optional</span>
                         <span className="font-mono text-xs font-bold text-sky-500 dark:text-sky-400">|o</span>
                       </button>
                     );
@@ -1020,7 +1036,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                             : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-[10px]">Many Opsional</span>
+                        <span className="text-[10px]">Many Optional</span>
                         <span className="font-mono text-xs font-bold text-sky-500 dark:text-sky-400">O&lt;</span>
                       </button>
                     );
@@ -1035,7 +1051,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
-                    Tabel 2: {targetTable?.name || 'Tabel 2'}
+                    Table 2: {targetTable?.name || 'Table 2'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 truncate max-w-[90px]">
@@ -1092,7 +1108,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                             : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-[10px]">One Opsional</span>
+                        <span className="text-[10px]">One Optional</span>
                         <span className="font-mono text-xs font-bold text-emerald-500 dark:text-emerald-400">|o</span>
                       </button>
                     );
@@ -1149,7 +1165,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                             : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-[10px]">Many Opsional</span>
+                        <span className="text-[10px]">Many Optional</span>
                         <span className="font-mono text-xs font-bold text-emerald-500 dark:text-emerald-400">O&lt;</span>
                       </button>
                     );
@@ -1170,7 +1186,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 }
                 className="w-full mt-2 py-1.5 px-2.5 bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-300 border border-sky-500/40 rounded-lg flex items-center justify-center gap-1.5 transition-colors font-medium text-[11px] cursor-pointer"
               >
-                <span>⚡ Buat Pivot/Junction Table Otomatis</span>
+                <span>⚡ Auto-Generate Junction / Pivot Table</span>
               </button>
             )}
 
@@ -1238,14 +1254,14 @@ export const Inspector: React.FC<InspectorProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <MoveHorizontal className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-                <span>Routing Jalur Garis</span>
+                <span>Line Routing</span>
               </span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                 {selectedRelation.customPath?.bendX !== undefined ||
                 selectedRelation.customPath?.bendY !== undefined ||
                 selectedRelation.customOffset !== undefined
-                  ? 'Kustom (PCB)'
-                  : 'Otomatis'}
+                  ? 'Custom (PCB)'
+                  : 'Automatic'}
               </span>
             </div>
 
@@ -1253,7 +1269,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               {selectedRelation.customPath?.bendX !== undefined ||
               selectedRelation.customPath?.bendY !== undefined ||
               selectedRelation.customOffset !== undefined
-                ? `Jalur disesuaikan manual (${[
+                ? `Manually adjusted route (${[
                     selectedRelation.customPath?.bendX !== undefined
                       ? `X: ${selectedRelation.customPath.bendX}`
                       : null,
@@ -1262,8 +1278,8 @@ export const Inspector: React.FC<InspectorProps> = ({
                       : null,
                   ]
                     .filter(Boolean)
-                    .join(', ')}). Anda bisa klik & seret garis langsung di canvas.`
-                : 'Jalur diatur otomatis. Klik & seret segmen garis vertikal (↔) atau horizontal (↕) langsung di canvas untuk merouting.'}
+                    .join(', ')}). You can drag line segments directly on the canvas.`
+                : 'Automatically routed. Drag vertical (↔) or horizontal (↕) line segments directly on canvas to reroute.'}
             </p>
 
             {(selectedRelation.customPath?.bendX !== undefined ||
@@ -1281,7 +1297,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 className="w-full py-1.5 px-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30 rounded-lg flex items-center justify-center gap-1.5 text-xs font-medium transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Kembalikan ke Posisi Otomatis</span>
+                <span>Reset to Auto Route</span>
               </button>
             )}
           </div>
@@ -1292,7 +1308,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Relasi Foreign Key</span>
+              <span>Delete Foreign Key Relationship</span>
             </button>
           </div>
         </div>
@@ -1304,7 +1320,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Table Name */}
           <div>
             <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-              Nama Tabel
+              Table Name
             </label>
             <input
               type="text"
@@ -1317,7 +1333,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Color Tag */}
           <div>
             <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
-              Tag Warna Tabel
+              Table Color Tag
             </label>
             <div className="flex items-center gap-1.5">
               {TABLE_COLOR_PRESETS.map((p) => (
@@ -1342,12 +1358,12 @@ export const Inspector: React.FC<InspectorProps> = ({
           {/* Comment / Note */}
           <div>
             <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-              Deskripsi / Komentar
+              Description / Comment
             </label>
             <textarea
               rows={2}
               value={selectedTable.comment || ''}
-              placeholder="Tambahkan catatan untuk tabel ini..."
+              placeholder="Add notes for this table..."
               onChange={(e) => handleTableCommentChange(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:border-sky-500/60 focus:bg-white dark:focus:bg-slate-950 focus:outline-none resize-none"
             />
@@ -1357,7 +1373,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Daftar Kolom ({selectedTable.columns.length})
+                Columns ({selectedTable.columns.length})
               </span>
               <div className="flex items-center gap-1.5">
                 {onSortColumns && selectedTable.columns.length > 1 && (
@@ -1365,10 +1381,10 @@ export const Inspector: React.FC<InspectorProps> = ({
                     type="button"
                     onClick={() => onSortColumns(selectedTable.id)}
                     className="flex items-center gap-1 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 text-[11px] font-medium transition-colors cursor-pointer"
-                    title="Rapikan urutan kolom sesuai konvensi standar (PK → FK → Atribut → Timestamps)"
+                    title="Sort columns by standard conventions (PK → FK → Attributes → Timestamps)"
                   >
                     <ArrowUpDown className="w-3 h-3" />
-                    <span>Rapikan</span>
+                    <span>Sort</span>
                   </button>
                 )}
                 <button
@@ -1376,7 +1392,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   className="flex items-center gap-1 px-2 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-[11px] font-medium transition-colors cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Tambah</span>
+                  <span>Add</span>
                 </button>
               </div>
             </div>
@@ -1417,7 +1433,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         {/* Drag Reorder Handle */}
                         <span
-                          title="Tarik untuk memindahkan urutan kolom"
+                          title="Drag to reorder column"
                           className="opacity-40 group-hover/colcard:opacity-90 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-400 dark:text-slate-500 hover:text-sky-500 dark:hover:text-sky-400 p-0.5 shrink-0"
                         >
                           <GripVertical className="w-3.5 h-3.5" />
@@ -1427,7 +1443,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                           onClick={() =>
                             handleUpdateColumn(col.id, { isPrimary: !col.isPrimary })
                           }
-                          title={col.isPrimary ? 'Primary Key (Aktif)' : 'Set sebagai Primary Key'}
+                          title={col.isPrimary ? 'Primary Key (Active)' : 'Set as Primary Key'}
                           className={`p-1 rounded transition-colors cursor-pointer flex items-center gap-1 ${
                             col.isPrimary
                               ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40'
@@ -1442,10 +1458,10 @@ export const Inspector: React.FC<InspectorProps> = ({
 
                         {fkRel && (
                           <span
-                            title={`Foreign Key terhubung ke ${tgtTable?.name || 'tabel'}.${tgtCol?.name || 'id'}`}
+                            title={`Foreign Key references ${tgtTable?.name || 'table'}.${tgtCol?.name || 'id'}`}
                             className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/40 shrink-0 shadow-xs"
                           >
-                            FK → {tgtTable?.name || 'relasi'}
+                            FK → {tgtTable?.name || 'relation'}
                           </span>
                         )}
 
@@ -1464,7 +1480,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         <button
                           disabled={isFirst}
                           onClick={() => handleMoveColumn(colIdx, 'up')}
-                          title="Pindahkan kolom ke atas"
+                          title="Move column up"
                           className={`p-1 rounded transition-colors ${
                             isFirst
                               ? 'text-slate-300 dark:text-slate-700 cursor-not-allowed'
@@ -1478,7 +1494,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         <button
                           disabled={isLast}
                           onClick={() => handleMoveColumn(colIdx, 'down')}
-                          title="Pindahkan kolom ke bawah"
+                          title="Move column down"
                           className={`p-1 rounded transition-colors ${
                             isLast
                               ? 'text-slate-300 dark:text-slate-700 cursor-not-allowed'
@@ -1492,7 +1508,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         <button
                           onClick={() => handleDeleteColumn(col.id, col.name)}
                           className="p-1 rounded text-slate-400 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer ml-0.5"
-                          title="Hapus Kolom"
+                          title="Delete Column"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1507,7 +1523,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                           onChange={(val) => handleUpdateColumn(col.id, { type: val })}
                           options={COMMON_DATA_TYPES}
                           threshold={5}
-                          placeholder="Pilih tipe..."
+                          placeholder="Select type..."
                         />
                       </div>
 
@@ -1583,7 +1599,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Tabel Ini</span>
+              <span>Delete This Table</span>
             </button>
           </div>
         </div>

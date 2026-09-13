@@ -80,7 +80,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-950/80 p-0.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
           <button
             type="button"
-            title="Mode Geser Canvas (Klik & Drag untuk menggeser)"
+            title="Pan Canvas Mode (Click & drag to pan)"
             onClick={() => setCanvasMode('pan')}
             className={`px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               canvasMode === 'pan'
@@ -89,12 +89,12 @@ export const Canvas: React.FC<CanvasProps> = ({
             }`}
           >
             <Hand className="w-3.5 h-3.5" />
-            <span className="text-[11px]">Geser</span>
+            <span className="text-[11px]">Pan</span>
           </button>
 
           <button
             type="button"
-            title="Mode Kotak Seleksi (Drag mouse untuk blok banyak tabel sekaligus)"
+            title="Box Selection Mode (Drag to select multiple tables)"
             onClick={() => setCanvasMode('select')}
             className={`px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               canvasMode === 'select'
@@ -103,7 +103,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             }`}
           >
             <BoxSelect className="w-3.5 h-3.5 text-sky-500" />
-            <span className="text-[11px]">Pilih Area</span>
+            <span className="text-[11px]">Select</span>
           </button>
         </div>
 
@@ -113,7 +113,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            title="Siku 90° Multi-Lane (Rapi & Tidak Bertumpuk)"
+            title="Orthogonal 90° Multi-Lane (Clean & non-overlapping)"
             onClick={() => onChangeRoutingStyle('smoothstep')}
             className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all cursor-pointer ${
               routingStyle === 'smoothstep'
@@ -122,12 +122,12 @@ export const Canvas: React.FC<CanvasProps> = ({
             }`}
           >
             <CornerDownRight className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span className="text-[11px]">Siku</span>
+            <span className="text-[11px]">Orthogonal</span>
           </button>
 
           <button
             type="button"
-            title="Kurva Bezier Organik (Melengkung Halus)"
+            title="Organic Bezier Curve (Smooth curvature)"
             onClick={() => onChangeRoutingStyle('bezier')}
             className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all cursor-pointer ${
               routingStyle === 'bezier'
@@ -136,13 +136,13 @@ export const Canvas: React.FC<CanvasProps> = ({
             }`}
           >
             <Spline className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span className="text-[11px]">Kurva</span>
+            <span className="text-[11px]">Bezier</span>
           </button>
 
           <button
             type="button"
             onClick={() => onChangeRoutingStyle('straight')}
-            title="Garis Langsung (Straight Line)"
+            title="Straight Line"
             className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all cursor-pointer ${
               routingStyle === 'straight'
                 ? 'bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/40 shadow-xs font-semibold'
@@ -150,7 +150,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             }`}
           >
             <Minus className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span className="text-[11px]">Lurus</span>
+            <span className="text-[11px]">Straight</span>
           </button>
         </div>
       </div>

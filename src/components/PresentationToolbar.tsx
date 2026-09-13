@@ -236,7 +236,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
           <button
             type="button"
             onClick={onPrevTable}
-            title="Tabel Sebelumnya (Panah Kiri / PageUp)"
+            title="Previous Table (Left Arrow / PageUp)"
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -248,7 +248,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
               type="button"
               onClick={() => setIsDropdownOpen((prev) => !prev)}
               className="flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer max-w-[200px]"
-              title="Klik untuk memilih tabel tertentu"
+              title="Click to select specific table"
             >
               {currentTable && (
                 <div
@@ -260,7 +260,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
                 {totalTables > 0 ? `${displayIndex}/${totalTables}` : '0/0'}
               </span>
               <span className="font-semibold truncate text-[11px] text-slate-100">
-                {currentTable?.name || 'Tanpa Tabel'}
+                {currentTable?.name || 'No Tables'}
               </span>
               <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-0.5" />
             </button>
@@ -269,7 +269,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
             {isDropdownOpen && (
               <div className="absolute bottom-full mb-2 left-0 w-56 max-h-64 overflow-y-auto bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl shadow-2xl p-1 space-y-0.5 z-50">
                 <div className="px-2.5 py-1 text-[10px] font-mono text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-800 mb-1">
-                  Pilih Fokus Tabel
+                  Select Table Focus
                 </div>
                 {tables.map((tbl, idx) => (
                   <button
@@ -304,7 +304,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
           <button
             type="button"
             onClick={onNextTable}
-            title="Tabel Berikutnya (Panah Kanan / Spasi / PageDown)"
+            title="Next Table (Right Arrow / Space / PageDown)"
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
@@ -317,7 +317,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
         <button
           type="button"
           onClick={() => setIsLaserActive((prev) => !prev)}
-          title="Toggle Laser Pointer (Tombol L)"
+          title="Toggle Laser Pointer (L key)"
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             isLaserActive
               ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-sm shadow-sky-500/20'
@@ -338,7 +338,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
           <button
             type="button"
             onClick={onFitView}
-            title="Fit to Screen (Tombol 0)"
+            title="Fit to Screen (0 key)"
             className="p-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800/80 transition-colors cursor-pointer"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export const PresentationToolbar: React.FC<PresentationToolbarProps> = ({
         <button
           type="button"
           onClick={onExit}
-          title="Keluar dari Presentation Mode (Esc)"
+          title="Exit Presentation Mode (Esc)"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-semibold transition-all cursor-pointer shadow-xs"
         >
           <X className="w-3.5 h-3.5" />

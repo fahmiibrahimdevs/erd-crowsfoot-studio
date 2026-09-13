@@ -262,7 +262,7 @@ export function useCanvasElements({
             const tgtCol = tgtTable?.columns.find((c) => c.id === r.targetColumnId);
             foreignKeys[r.sourceColumnId] = tgtTable
               ? `${tgtTable.name}.${tgtCol?.name || 'id'}`
-              : 'relasi';
+              : 'relation';
           }
         });
 

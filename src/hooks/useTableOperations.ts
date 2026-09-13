@@ -4,6 +4,7 @@ import {
   TableData,
   RelationshipData,
   ColumnData,
+  ErdGroup,
   SqlDialect,
   TABLE_COLOR_PRESETS,
 } from '../types/schema';
@@ -14,11 +15,13 @@ import {
   sortTablesColumns,
   isTableColumnsSorted,
 } from '../utils/columnSorter';
+import { autoColorTablesByDomain } from '../utils/autoColoring';
 
 interface UseTableOperationsProps {
   tables: TableData[];
   tablesRef: React.MutableRefObject<TableData[]>;
   relations: RelationshipData[];
+  groups?: ErdGroup[];
   dialect: SqlDialect;
   historyPositions?: Record<string, { x: number; y: number }>;
   getNodePositions: () => Record<string, { x: number; y: number }>;
@@ -44,6 +47,7 @@ export function useTableOperations({
   tables,
   tablesRef,
   relations,
+  groups = [],
   dialect,
   historyPositions,
   getNodePositions,
@@ -101,7 +105,7 @@ export function useTableOperations({
       setSelectedTableId(newTable.id);
       setSelectedTableIds([newTable.id]);
       setSelectedRelationId(null);
-      showToast(`Tabel "${newTable.name}" dibuat!`);
+      showToast(`Table "${newTable.name}" created!`);
     },
     [getNodePositions, setSelectedRelationId, setSelectedTableId, setSelectedTableIds, tablesRef, updateSchema]
   );
@@ -187,7 +191,7 @@ export function useTableOperations({
       );
       setSelectedTableId(null);
       setSelectedTableIds([]);
-      showToast(`${tableIds.length} tabel telah dihapus`, 'info');
+      showToast(`${tableIds.length} tables deleted`, 'info');
     },
     [setSelectedTableId, setSelectedTableIds, updateSchema]
   );
@@ -199,7 +203,7 @@ export function useTableOperations({
       updateSchema((prev: TableData[]) =>
         prev.map((t) => (idSet.has(t.id) ? { ...t, colorTag } : t))
       );
-      showToast(`Warna ${tableIds.length} tabel diperbarui`, 'success');
+      showToast(`Color updated for ${tableIds.length} tables`, 'success');
     },
     [updateSchema]
   );
@@ -214,20 +218,20 @@ export function useTableOperations({
 
       if (finalName === undefined) {
         const inputName = await promptDialog({
-          title: 'Ganti Nama Tabel',
-          text: `Masukkan nama baru untuk tabel "${target.name}":`,
+          title: 'Rename Table',
+          text: `Enter a new name for table "${target.name}":`,
           inputValue: target.name,
-          inputPlaceholder: 'Contoh: users, orders, order_items...',
-          confirmText: 'Ya, Ubah',
-          cancelText: 'Batal',
+          inputPlaceholder: 'Example: users, orders, order_items...',
+          confirmText: 'Yes, Rename',
+          cancelText: 'Cancel',
           validate: (val) => {
             const cleanVal = val.trim().toLowerCase().replace(/\s+/g, '_');
-            if (!cleanVal) return 'Nama tabel tidak boleh kosong!';
+            if (!cleanVal) return 'Table name cannot be empty!';
             const exists = currentTables.some(
               (t) => t.id !== tableId && t.name.toLowerCase() === cleanVal
             );
             if (exists) {
-              return `Nama tabel "${cleanVal}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`;
+              return `Table name "${cleanVal}" is already in use by another table! Please use a different name.`;
             }
             return null;
           },
@@ -248,7 +252,7 @@ export function useTableOperations({
       );
       if (isDuplicate) {
         showToast(
-          `Nama tabel "${clean}" sudah digunakan oleh tabel lain! Silakan gunakan nama lain.`,
+          `Table name "${clean}" is already in use by another table! Please use a different name.`,
           'error'
         );
         return;
@@ -258,7 +262,7 @@ export function useTableOperations({
         (prev: TableData[]) => prev.map((t) => (t.id === tableId ? { ...t, name: clean } : t)),
         (prev: any) => prev
       );
-      showToast(`Nama tabel diubah menjadi "${clean}"`, 'success');
+      showToast(`Table renamed to "${clean}"`, 'success');
     },
     [tablesRef, updateSchema]
   );
@@ -312,7 +316,7 @@ export function useTableOperations({
       if (dupIds.length === 1) {
         setSelectedTableId(dupIds[0]);
       }
-      showToast(`Berhasil menduplikasi ${duplicatedTables.length} tabel`, 'success');
+      showToast(`Successfully duplicated ${duplicatedTables.length} tables`, 'success');
     },
     [getNodePositions, historyPositions, setSelectedTableId, setSelectedTableIds, tablesRef, updateSchema]
   );
@@ -339,7 +343,7 @@ export function useTableOperations({
       );
       setSelectedTableId(tableId);
       setSelectedTableIds([tableId]);
-      showToast('Kolom baru ditambahkan');
+      showToast('New column added');
     },
     [setSelectedTableId, setSelectedTableIds, tables, updateSchema]
   );
@@ -360,7 +364,7 @@ export function useTableOperations({
       if (!targetTable) return;
 
       if (isTableColumnsSorted(targetTable.columns, targetTable.id, relations)) {
-        showToast(`Kolom tabel "${targetTable.name}" sudah rapi sesuai standar!`, 'info');
+        showToast(`Columns of table "${targetTable.name}" are already sorted!`, 'info');
         return;
       }
 
@@ -368,7 +372,7 @@ export function useTableOperations({
       updateSchema((prev: TableData[]) =>
         prev.map((t) => (t.id === tableId ? { ...t, columns: sorted } : t))
       );
-      showToast(`Urutan kolom tabel "${targetTable.name}" berhasil dirapikan!`, 'success');
+      showToast(`Columns in table "${targetTable.name}" sorted successfully!`, 'success');
     },
     [relations, tablesRef, updateSchema]
   );
@@ -385,17 +389,56 @@ export function useTableOperations({
       if (modifiedCount === 0) {
         showToast(
           targetTableIds && targetTableIds.length === 1
-            ? 'Kolom tabel ini sudah rapi sesuai standar!'
-            : 'Semua kolom tabel yang dipilih sudah rapi sesuai standar!',
+            ? 'Columns in this table are already sorted!'
+            : 'All selected tables columns are already sorted!',
           'info'
         );
         return;
       }
 
       updateSchema(() => updatedTables);
-      showToast(`Berhasil merapikan kolom pada ${modifiedCount} tabel!`, 'success');
+      showToast(`Successfully sorted columns on ${modifiedCount} tables!`, 'success');
     },
     [relations, tablesRef, updateSchema]
+  );
+
+  const handleAutoColorDomains = useCallback(
+    (targetTableIds?: string[]) => {
+      const currentTables = tablesRef.current;
+      const { updatedTables, changedCount, domainStats } = autoColorTablesByDomain(
+        currentTables,
+        relations,
+        groups,
+        targetTableIds
+      );
+
+      if (domainStats.length === 0) {
+        showToast(
+          'No shared module prefixes or domains found across tables.',
+          'info'
+        );
+        return;
+      }
+
+      if (changedCount === 0) {
+        showToast(
+          targetTableIds && targetTableIds.length === 1
+            ? 'This table color is already aligned with its domain/prefix!'
+            : 'Tables with shared domains already have aligned colors!',
+          'info'
+        );
+        return;
+      }
+
+      updateSchema(() => updatedTables);
+      const domainNamesStr = domainStats.map((d) => d.domain).slice(0, 4).join(', ');
+      const moreStr = domainStats.length > 4 ? ` and ${domainStats.length - 4} more` : '';
+      showToast(
+        `Successfully colored ${changedCount} tables across ${domainStats.length} domains (${domainNamesStr}${moreStr})!`,
+        'success'
+      );
+    },
+    [groups, relations, tablesRef, updateSchema]
   );
 
   const handleCopySql = useCallback(
@@ -407,7 +450,7 @@ export function useTableOperations({
       );
       const sql = generateSqlFromSchema([tbl], rels, dialect);
       navigator.clipboard.writeText(sql).then(() => {
-        showToast(`SQL CREATE untuk "${tbl.name}" disalin ke clipboard`, 'success');
+        showToast(`SQL CREATE for "${tbl.name}" copied to clipboard`, 'success');
       });
     },
     [dialect, relations, tables]
@@ -428,7 +471,7 @@ export function useTableOperations({
       const targetColId = connection.targetHandle.replace('-right', '').replace('-left', '');
 
       if (connection.source === connection.target && sourceColId === targetColId) {
-        showToast('Tidak dapat menghubungkan kolom ke dirinya sendiri', 'warning');
+        showToast('Cannot connect a column to itself', 'warning');
         return;
       }
 
@@ -455,7 +498,7 @@ export function useTableOperations({
       if (existingRel) {
         setSelectedRelationId(existingRel.id);
         setSelectedTableId(null);
-        showToast('Relasi antara kedua kolom ini sudah ada!', 'warning');
+        showToast('Relationship between these columns already exists!', 'warning');
         return;
       }
 
@@ -513,7 +556,7 @@ export function useTableOperations({
         setSelectedRelationId(newRelation.id);
         setSelectedTableId(null);
         showToast(
-          `Kolom Foreign Key "${newColName}" otomatis ditambahkan ke "${targetTable.name}"!`,
+          `Foreign Key column "${newColName}" automatically added to "${targetTable.name}"!`,
           'success'
         );
         return;
@@ -544,7 +587,7 @@ export function useTableOperations({
         setSelectedRelationId(newRelation.id);
         setSelectedTableId(null);
         showToast(
-          `Relasi ${isOneToOne ? 'One-to-One' : 'One-to-Many'} (${sourceTable.name}.${sourceCol.name} → ${targetTable.name}.${targetCol.name}) berhasil terhubung!`,
+          `${isOneToOne ? 'One-to-One' : 'One-to-Many'} relation (${sourceTable.name}.${sourceCol.name} → ${targetTable.name}.${targetCol.name}) connected successfully!`,
           'success'
         );
         return;
@@ -574,7 +617,7 @@ export function useTableOperations({
         setSelectedRelationId(newRelation.id);
         setSelectedTableId(null);
         showToast(
-          `Relasi ${isOneToOne ? 'One-to-One' : 'One-to-Many'} (${targetTable.name}.${targetCol.name} → ${sourceTable.name}.${sourceCol.name}) berhasil terhubung!`,
+          `${isOneToOne ? 'One-to-One' : 'One-to-Many'} relation (${targetTable.name}.${targetCol.name} → ${sourceTable.name}.${sourceCol.name}) connected successfully!`,
           'success'
         );
         return;
@@ -615,7 +658,7 @@ export function useTableOperations({
       setSelectedRelationId(newRelation.id);
       setSelectedTableId(null);
       showToast(
-        `Kolom "${targetTable.name}.${targetCol.name}" otomatis dijadikan Primary Key (PK) & relasi terhubung!`,
+        `Column "${targetTable.name}.${targetCol.name}" automatically set as Primary Key (PK) & relation connected!`,
         'success'
       );
     },
@@ -631,7 +674,7 @@ export function useTableOperations({
       const sourcePk = source.columns.find((c) => c.isPrimary) || source.columns[0];
       const targetPk = target.columns.find((c) => c.isPrimary) || target.columns[0];
       if (!sourcePk || !targetPk) {
-        showToast('Kedua tabel harus memiliki Primary Key untuk membuat tabel pivot', 'warning');
+        showToast('Both tables must have Primary Keys to generate a junction table', 'warning');
         return;
       }
 
@@ -733,7 +776,7 @@ export function useTableOperations({
       setSelectedTableIds([junctionTable.id]);
       setSelectedRelationId(null);
       showToast(
-        `Tabel Pivot "${junctionName}" berhasil digenerate menggantikan relasi Many-to-Many!`,
+        `Junction table "${junctionName}" generated to replace Many-to-Many relationship!`,
         'success'
       );
     },
@@ -752,6 +795,7 @@ export function useTableOperations({
     handleReorderColumns,
     handleSortTableColumns,
     handleSortMultipleTablesColumns,
+    handleAutoColorDomains,
     handleCopySql,
     handleConnect,
     handleGenerateJunctionTable,

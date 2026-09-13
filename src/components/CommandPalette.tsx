@@ -29,6 +29,7 @@ import {
   AlignVerticalSpaceBetween,
   Wand2,
   ArrowUpDown,
+  Palette,
 } from 'lucide-react';
 import { TableData, SqlDialect, EdgeRoutingStyle } from '../types/schema';
 import { AlignMode, DistributeMode } from '../utils/alignment';
@@ -58,6 +59,7 @@ interface CommandPaletteProps {
   onDistributeTables?: (mode: DistributeMode, tableIds: string[]) => void;
   onTidyOverlaps?: (scopeIds?: string[]) => void;
   onSortColumns?: (tableIds?: string[]) => void;
+  onAutoColorDomains?: (tableIds?: string[]) => void;
   onOpenTemplatesModal: () => void;
   onOpenImportModal: () => void;
   onOpenExportModal: () => void;
@@ -82,6 +84,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onDistributeTables,
   onTidyOverlaps,
   onSortColumns,
+  onAutoColorDomains,
   onOpenTemplatesModal,
   onOpenImportModal,
   onOpenExportModal,
@@ -121,7 +124,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         id: `table-${tbl.id}`,
         category: 'tables',
         title: tbl.name,
-        subtitle: `${tbl.columns.length} kolom · ${tbl.comment || dialect.toUpperCase()}`,
+        subtitle: `${tbl.columns.length} columns · ${tbl.comment || dialect.toUpperCase()}`,
         colorTag: tbl.colorTag || '#38bdf8',
         icon: <Table className="w-4 h-4 text-sky-400" />,
         onSelect: () => {
@@ -150,7 +153,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           id: `col-${tbl.id}-${col.id}`,
           category: 'columns',
           title: col.name,
-          subtitle: `Tabel: ${tbl.name} · ${typeMeta.display}`,
+          subtitle: `Table: ${tbl.name} · ${typeMeta.display}`,
           badge: badgeText,
           badgeType,
           colorTag: tbl.colorTag || '#38bdf8',
@@ -171,8 +174,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-add-table',
       category: 'commands',
-      title: 'Tambah Tabel Baru',
-      subtitle: 'Buat tabel baru langsung di canvas',
+      title: 'Add New Table',
+      subtitle: 'Create a new table directly on the canvas',
       icon: <Plus className="w-4 h-4 text-emerald-400" />,
       onSelect: () => {
         onAddTable();
@@ -183,8 +186,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-auto-layout',
       category: 'commands',
-      title: 'Tata Otomatis Canvas (Auto Layout)',
-      subtitle: 'Rapikan posisi seluruh tabel dan relasi secara terstruktur',
+      title: 'Auto Layout Canvas',
+      subtitle: 'Automatically arrange tables and relations neatly',
       icon: <LayoutGrid className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAutoLayout();
@@ -195,8 +198,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-tidy-overlaps',
       category: 'commands',
-      title: 'Pisahkan Tabel Bertumpuk (Tidy Overlaps)',
-      subtitle: 'Dorong tabel-tabel yang saling menutupi ke ruang kosong terdekat',
+      title: 'Tidy Overlaps',
+      subtitle: 'Nudge overlapping tables to the nearest open space',
       icon: <Wand2 className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onTidyOverlaps?.(selectedTableIds.length > 0 ? selectedTableIds : undefined);
@@ -209,8 +212,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         items.push({
           id: 'cmd-sort-columns-selected',
           category: 'commands',
-          title: `Rapikan Urutan Kolom (${selectedTableIds.length} Tabel Terpilih)`,
-          subtitle: 'Urutkan kolom: PK → FK → Atribut Reguler → Timestamps/Audit',
+          title: `Sort Columns (${selectedTableIds.length} Selected Tables)`,
+          subtitle: 'Sort columns: PK → FK → Regular Attributes → Timestamps/Audit',
           icon: <ArrowUpDown className="w-4 h-4 text-sky-400" />,
           onSelect: () => {
             onSortColumns(selectedTableIds);
@@ -222,8 +225,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       items.push({
         id: 'cmd-sort-columns-all',
         category: 'commands',
-        title: 'Rapikan Urutan Kolom (Semua Tabel di Canvas)',
-        subtitle: 'Format urutan kolom seluruh tabel: PK → FK → Atribut → Timestamps',
+        title: 'Sort Columns (All Tables on Canvas)',
+        subtitle: 'Sort all table columns: PK → FK → Attributes → Timestamps',
         icon: <ArrowUpDown className="w-4 h-4 text-sky-400" />,
         onSelect: () => {
           onSortColumns();
@@ -232,14 +235,42 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       });
     }
 
+    if (onAutoColorDomains) {
+      if (selectedTableIds.length > 0) {
+        items.push({
+          id: 'cmd-auto-color-selected',
+          category: 'commands',
+          title: `Auto-Color Selected Tables (${selectedTableIds.length} Tables by Prefix/Domain)`,
+          subtitle: 'Assign uniform header colors based on module or name prefix',
+          icon: <Palette className="w-4 h-4 text-sky-400" />,
+          onSelect: () => {
+            onAutoColorDomains(selectedTableIds);
+            onClose();
+          },
+        });
+      }
+
+      items.push({
+        id: 'cmd-auto-color-all',
+        category: 'commands',
+        title: 'Auto-Color Diagram (by Domain/Prefix)',
+        subtitle: 'Automatically group table header colors by domain & module name',
+        icon: <Palette className="w-4 h-4 text-sky-400" />,
+        onSelect: () => {
+          onAutoColorDomains();
+          onClose();
+        },
+      });
+    }
+
     const targetTableIdsForAlign = selectedTableIds.length >= 2 ? selectedTableIds : tables.map((t) => t.id);
-    const targetScopeLabel = selectedTableIds.length >= 2 ? `${selectedTableIds.length} tabel terpilih` : 'seluruh tabel';
+    const targetScopeLabel = selectedTableIds.length >= 2 ? `${selectedTableIds.length} selected tables` : 'all tables';
 
     items.push({
       id: 'cmd-align-left',
       category: 'commands',
-      title: 'Ratakan Tabel ke Sisi Kiri (Align Left)',
-      subtitle: `Sejajarkan koordinat X ke paling kiri (${targetScopeLabel})`,
+      title: 'Align Left',
+      subtitle: `Align X coordinate to leftmost edge (${targetScopeLabel})`,
       icon: <AlignStartHorizontal className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('left', targetTableIdsForAlign);
@@ -250,8 +281,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-align-center',
       category: 'commands',
-      title: 'Ratakan Tabel ke Tengah Horizontal (Align Center)',
-      subtitle: `Sejajarkan titik tengah horizontal (${targetScopeLabel})`,
+      title: 'Align Center Horizontal',
+      subtitle: `Align horizontal center axis (${targetScopeLabel})`,
       icon: <AlignCenterHorizontal className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('center', targetTableIdsForAlign);
@@ -262,8 +293,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-align-right',
       category: 'commands',
-      title: 'Ratakan Tabel ke Sisi Kanan (Align Right)',
-      subtitle: `Sejajarkan koordinat X ke paling kanan (${targetScopeLabel})`,
+      title: 'Align Right',
+      subtitle: `Align X coordinate to rightmost edge (${targetScopeLabel})`,
       icon: <AlignEndHorizontal className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('right', targetTableIdsForAlign);
@@ -274,8 +305,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-align-top',
       category: 'commands',
-      title: 'Ratakan Tabel ke Sisi Atas (Align Top)',
-      subtitle: `Sejajarkan koordinat Y ke paling atas (${targetScopeLabel})`,
+      title: 'Align Top',
+      subtitle: `Align Y coordinate to topmost edge (${targetScopeLabel})`,
       icon: <AlignStartVertical className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('top', targetTableIdsForAlign);
@@ -286,8 +317,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-align-middle',
       category: 'commands',
-      title: 'Ratakan Tabel ke Tengah Vertikal (Align Middle)',
-      subtitle: `Sejajarkan titik tengah vertikal (${targetScopeLabel})`,
+      title: 'Align Middle Vertical',
+      subtitle: `Align vertical center axis (${targetScopeLabel})`,
       icon: <AlignCenterVertical className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('middle', targetTableIdsForAlign);
@@ -298,8 +329,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-align-bottom',
       category: 'commands',
-      title: 'Ratakan Tabel ke Sisi Bawah (Align Bottom)',
-      subtitle: `Sejajarkan koordinat Y ke paling bawah (${targetScopeLabel})`,
+      title: 'Align Bottom',
+      subtitle: `Align Y coordinate to bottommost edge (${targetScopeLabel})`,
       icon: <AlignEndVertical className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onAlignTables?.('bottom', targetTableIdsForAlign);
@@ -310,8 +341,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-distribute-horizontal',
       category: 'commands',
-      title: 'Ratakan Jarak Spasi Horizontal (Distribute Horizontally)',
-      subtitle: `Seragamkan jarak spasi mendatar antar tabel (${targetScopeLabel})`,
+      title: 'Distribute Horizontally',
+      subtitle: `Equalize horizontal spacing between tables (${targetScopeLabel})`,
       icon: <AlignHorizontalSpaceBetween className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onDistributeTables?.('horizontal', targetTableIdsForAlign);
@@ -322,8 +353,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-distribute-vertical',
       category: 'commands',
-      title: 'Ratakan Jarak Spasi Vertikal (Distribute Vertically)',
-      subtitle: `Seragamkan jarak spasi tegak antar tabel (${targetScopeLabel})`,
+      title: 'Distribute Vertically',
+      subtitle: `Equalize vertical spacing between tables (${targetScopeLabel})`,
       icon: <AlignVerticalSpaceBetween className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onDistributeTables?.('vertical', targetTableIdsForAlign);
@@ -334,8 +365,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-fit-view',
       category: 'commands',
-      title: 'Pusatkan Seluruh Diagram (Fit View)',
-      subtitle: 'Fokuskan pandangan canvas mencakup semua tabel',
+      title: 'Fit View',
+      subtitle: 'Zoom and pan canvas to fit all tables',
       icon: <Focus className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onFitView();
@@ -346,8 +377,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-templates',
       category: 'commands',
-      title: 'Buka Template Skema ERD...',
-      subtitle: 'Pilih preset skema database (E-Commerce, Social, Auth, SaaS)',
+      title: 'Open ERD Templates...',
+      subtitle: 'Choose database schema presets (E-Commerce, Social, Auth, SaaS)',
       icon: <Sparkles className="w-4 h-4 text-amber-400" />,
       onSelect: () => {
         onOpenTemplatesModal();
@@ -359,7 +390,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: 'cmd-import-sql',
       category: 'commands',
       title: 'Import SQL DDL Script...',
-      subtitle: 'Muat tabel dari file SQL CREATE TABLE / ALTER TABLE',
+      subtitle: 'Load tables from SQL CREATE TABLE / ALTER TABLE scripts',
       icon: <FolderDown className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onOpenImportModal();
@@ -371,7 +402,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: 'cmd-export',
       category: 'commands',
       title: 'Export SQL & Diagram...',
-      subtitle: 'Download script SQL DDL, skema ERD, atau gambar',
+      subtitle: 'Export SQL DDL script, JSON schema, or PNG image',
       icon: <Download className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
         onOpenExportModal();
@@ -382,9 +413,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-line-smoothstep',
       category: 'commands',
-      title: 'Gaya Garis: Siku 90° (Multi-Lane Smart Routing)',
-      subtitle: 'Garis orthogonal rapi dengan penghindaran tabrakan',
-      badge: routingStyle === 'smoothstep' ? 'Aktif' : undefined,
+      title: 'Line Style: 90° Orthogonal (Smart Routing)',
+      subtitle: 'Clean orthogonal multi-lane routing with obstacle avoidance',
+      badge: routingStyle === 'smoothstep' ? 'Active' : undefined,
       badgeType: 'tag',
       icon: <CornerDownRight className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
@@ -396,9 +427,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-line-bezier',
       category: 'commands',
-      title: 'Gaya Garis: Kurva Bezier Organik',
-      subtitle: 'Garis melengkung halus dan elegan',
-      badge: routingStyle === 'bezier' ? 'Aktif' : undefined,
+      title: 'Line Style: Organic Bezier Curves',
+      subtitle: 'Smooth and elegant curved lines',
+      badge: routingStyle === 'bezier' ? 'Active' : undefined,
       badgeType: 'tag',
       icon: <Spline className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
@@ -410,9 +441,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-line-straight',
       category: 'commands',
-      title: 'Gaya Garis: Garis Lurus (Straight)',
-      subtitle: 'Hubungan langsung tanpa tikungan',
-      badge: routingStyle === 'straight' ? 'Aktif' : undefined,
+      title: 'Line Style: Straight Lines',
+      subtitle: 'Direct connection without bends',
+      badge: routingStyle === 'straight' ? 'Active' : undefined,
       badgeType: 'tag',
       icon: <Minus className="w-4 h-4 text-sky-400" />,
       onSelect: () => {
@@ -424,8 +455,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-toggle-theme',
       category: 'commands',
-      title: theme === 'dark' ? 'Ganti ke Light Mode' : 'Ganti ke Dark Mode',
-      subtitle: `Beralih ke tema tampilan ${theme === 'dark' ? 'terang' : 'gelap'}`,
+      title: theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+      subtitle: `Switch to ${theme === 'dark' ? 'light' : 'dark'} display theme`,
       icon: theme === 'dark' ? (
         <Sun className="w-4 h-4 text-amber-400" />
       ) : (
@@ -440,8 +471,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     items.push({
       id: 'cmd-clear-canvas',
       category: 'commands',
-      title: 'Kosongkan Seluruh Canvas',
-      subtitle: 'Hapus semua tabel dan relasi pada file yang aktif',
+      title: 'Clear Entire Canvas',
+      subtitle: 'Delete all tables and relations in the active file',
       icon: <Trash2 className="w-4 h-4 text-rose-400" />,
       onSelect: () => {
         onClearCanvas();
@@ -542,7 +573,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari tabel, kolom, perintah cepat... (Ctrl+K)"
+            placeholder="Search tables, columns, quick commands... (Ctrl+K)"
             className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm font-medium outline-none"
           />
           {query ? (
@@ -564,16 +595,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800/80 w-fit">
             {(
               [
-                { key: 'all', label: 'Semua', count: allItems.length },
-                { key: 'tables', label: 'Tabel', count: tables.length },
+                { key: 'all', label: 'All', count: allItems.length },
+                { key: 'tables', label: 'Tables', count: tables.length },
                 {
                   key: 'columns',
-                  label: 'Kolom',
+                  label: 'Columns',
                   count: tables.reduce((acc, t) => acc + t.columns.length, 0),
                 },
                 {
                   key: 'commands',
-                  label: 'Perintah',
+                  label: 'Commands',
                   count: allItems.filter((i) => i.category === 'commands').length,
                 },
               ] as const
@@ -619,9 +650,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {filteredItems.length === 0 ? (
             <div className="py-12 px-4 text-center">
               <Search className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-50" />
-              <p className="text-slate-300 text-sm font-medium">Tidak ditemukan hasil yang cocok</p>
+              <p className="text-slate-300 text-sm font-medium">No matching results found</p>
               <p className="text-slate-500 text-xs mt-1 font-mono">
-                Coba ketik kata kunci nama tabel, kolom, atau tindakan
+                Try searching for table name, column, or quick action
               </p>
             </div>
           ) : (
@@ -697,7 +728,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   <div className="shrink-0 flex items-center text-slate-500">
                     {isSelected ? (
                       <span className="flex items-center gap-1 text-[11px] font-mono text-sky-400 bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 rounded-md">
-                        <span>Pilih</span>
+                        <span>Select</span>
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     ) : (
@@ -719,19 +750,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">
                 ↑↓
               </kbd>
-              <span>Navigasi</span>
+              <span>Navigate</span>
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">
                 ↵
               </kbd>
-              <span>Pilih</span>
+              <span>Select</span>
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">
                 ESC
               </kbd>
-              <span>Tutup</span>
+              <span>Close</span>
             </span>
           </div>
 

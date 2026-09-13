@@ -30,7 +30,7 @@ export function useGroupOperations({
       const currentGroups = groupsRef.current;
       const validIds = tableIds.filter((id) => currentTables.some((t) => t.id === id));
       if (validIds.length <= 1) {
-        showToast('Pilih minimal 2 tabel untuk membuat grup', 'warning');
+        showToast('Select at least 2 tables to create a group', 'warning');
         return;
       }
 
@@ -67,7 +67,7 @@ export function useGroupOperations({
       setSelectedGroupId(newGroupId);
       setSelectedTableId(null);
       setSelectedTableIds([]);
-      showToast(`Grup "${newGroup.name}" berhasil dibuat (${validIds.length} tabel)`, 'success');
+      showToast(`Group "${newGroup.name}" created (${validIds.length} tables)`, 'success');
     },
     [groupsRef, tablesRef, setSelectedGroupId, setSelectedTableId, setSelectedTableIds, updateSchema]
   );
@@ -81,7 +81,7 @@ export function useGroupOperations({
         (prevGroups) => (prevGroups || []).filter((g) => g.id !== groupId)
       );
       setSelectedGroupId((curr) => (curr === groupId ? null : curr));
-      showToast('Grup berhasil dibubarkan (Ungroup)', 'info');
+      showToast('Group ungrouped successfully', 'info');
     },
     [setSelectedGroupId, updateSchema]
   );
@@ -94,30 +94,30 @@ export function useGroupOperations({
 
       let finalName = newName;
 
-      // Jika newName tidak dipassing (misal dari ContextMenu / action klik), minta input via SweetAlert2 prompt dialog
+      // If newName is not passed (e.g. from ContextMenu / click action), prompt user via dialog
       if (finalName === undefined) {
         const inputName = await promptDialog({
-          title: 'Ganti Nama Grup',
-          text: 'Masukkan nama baru untuk grup modul ini:',
+          title: 'Rename Group',
+          text: 'Enter a new name for this module group:',
           inputValue: target.name,
-          inputPlaceholder: 'Contoh: Modul Transaksi, Modul User, dll...',
-          confirmText: 'Ya, Ubah',
-          cancelText: 'Batal',
+          inputPlaceholder: 'e.g. Transactions, User Management, etc...',
+          confirmText: 'Save',
+          cancelText: 'Cancel',
           validate: (val) => {
             const cleanVal = val.trim();
-            if (!cleanVal) return 'Nama grup tidak boleh kosong!';
+            if (!cleanVal) return 'Group name cannot be empty!';
             const exists = currentGroups.some(
               (g) => g.id !== groupId && g.name.toLowerCase() === cleanVal.toLowerCase()
             );
             if (exists) {
-              return `Nama grup "${cleanVal}" sudah digunakan oleh grup lain! Silakan gunakan nama lain.`;
+              return `Group name "${cleanVal}" is already used by another group! Please choose a different name.`;
             }
             return null;
           },
         });
 
         if (!inputName) {
-          return; // Pengguna menekan Batal
+          return; // User cancelled
         }
         finalName = inputName;
       }
@@ -131,7 +131,7 @@ export function useGroupOperations({
       );
       if (isDuplicate) {
         showToast(
-          `Nama grup "${clean}" sudah digunakan oleh grup lain! Silakan gunakan nama lain.`,
+          `Group name "${clean}" is already used by another group! Please choose a different name.`,
           'error'
         );
         return;
@@ -144,7 +144,7 @@ export function useGroupOperations({
         (prevGroups) =>
           (prevGroups || []).map((g) => (g.id === groupId ? { ...g, name: clean } : g))
       );
-      showToast(`Nama grup diubah menjadi "${clean}"`, 'success');
+      showToast(`Group renamed to "${clean}"`, 'success');
     },
     [groupsRef, updateSchema]
   );
@@ -156,10 +156,10 @@ export function useGroupOperations({
       if (!target) return;
 
       const confirmed = await confirmDialog({
-        title: 'Hapus Grup & Seluruh Tabel?',
-        text: `Apakah Anda yakin ingin menghapus grup "${target.name}" beserta ${target.tableIds.length} tabel di dalamnya?`,
-        confirmText: 'Ya, Hapus',
-        cancelText: 'Batal',
+        title: 'Delete Group & All Tables?',
+        text: `Are you sure you want to delete group "${target.name}" and all ${target.tableIds.length} tables inside it?`,
+        confirmText: 'Yes, Delete',
+        cancelText: 'Cancel',
         isDangerous: true,
       });
 
@@ -179,7 +179,7 @@ export function useGroupOperations({
       setSelectedTableId(null);
       setSelectedTableIds([]);
       showToast(
-        `Grup "${target.name}" beserta ${target.tableIds.length} tabel telah dihapus`,
+        `Group "${target.name}" and ${target.tableIds.length} tables deleted`,
         'info'
       );
     },
@@ -195,7 +195,7 @@ export function useGroupOperations({
         (prevGroups) =>
           (prevGroups || []).map((g) => (g.id === groupId ? { ...g, colorTag } : g))
       );
-      showToast('Warna grup diperbarui', 'success');
+      showToast('Group color updated', 'success');
     },
     [updateSchema]
   );

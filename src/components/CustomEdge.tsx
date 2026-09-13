@@ -521,7 +521,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
       edgeData.onUpdateRelationPath(relation.id, {
         waypoints: cleaned.length >= 4 ? cleaned : undefined,
       });
-      showToast('Sudut belokan dihapus', 'info');
+      showToast('Corner waypoint removed', 'info');
     }
   };
 
@@ -530,7 +530,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
     e.stopPropagation();
     if (relation && edgeData?.onUpdateRelationPath) {
       edgeData.onUpdateRelationPath(relation.id, undefined);
-      showToast('Jalur garis dikembalikan ke otomatis cerdas', 'info');
+      showToast('Relationship route reset to auto', 'info');
     }
   };
 
@@ -539,15 +539,15 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
     if (!relation) return;
 
     const confirmed = await confirmDialog({
-      title: 'Hapus Relasi?',
-      text: 'Garis hubungan antar tabel ini akan dilepas dari skema database.',
-      confirmText: 'Ya, Hapus Relasi',
+      title: 'Delete Relationship?',
+      text: 'The connection between these tables will be removed from schema.',
+      confirmText: 'Yes, Delete Relationship',
       isDangerous: true,
     });
 
     if (confirmed) {
       edgeData?.onDeleteRelation?.(relation.id);
-      showToast('Relasi foreign key berhasil dihapus', 'info');
+      showToast('Foreign key relationship deleted', 'info');
     }
   };
 
@@ -814,10 +814,10 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
                     e.stopPropagation();
                     if (relation && edgeData?.onUpdateRelationPath) {
                       edgeData.onUpdateRelationPath(relation.id, undefined);
-                      showToast('Jalur garis dikembalikan ke otomatis cerdas', 'info');
+                      showToast('Relationship route reset to auto', 'info');
                     }
                   }}
-                  title="Kembalikan ke rute otomatis cerdas (atau klik ganda garis)"
+                  title="Reset to smart auto route (or double-click line)"
                   className="p-0.5 rounded hover:bg-sky-500/20 text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-300 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
@@ -828,7 +828,7 @@ export const CustomEdge: React.FC<EdgeProps> = memo(({
               {!dragState && (
                 <button
                   onClick={handleDeleteRelation}
-                  title="Hapus Relasi"
+                  title="Delete Relationship"
                   className="ml-0.5 p-0.5 rounded hover:bg-rose-500/20 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
                 >
                   <X className="w-2.5 h-2.5" />

@@ -27,10 +27,10 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-100">
-                Pilih Starter Schema Preset
+                Choose Schema Starter Preset
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Mulai cepat dengan struktur skema database siap pakai
+                Get started quickly with ready-to-use database schemas
               </p>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                       {preset.name}
                     </h4>
                     <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
-                      {preset.tables.length} tabel • {preset.relations.length} relasi
+                      {preset.tables.length} tables • {preset.relations.length} relations
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -79,12 +79,12 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <button
                   onClick={() => {
                     onSelectPreset(preset);
-                    showToast(`Template "${preset.name}" berhasil dimuat!`, 'success');
+                    showToast(`Template "${preset.name}" loaded successfully!`, 'success');
                     onClose();
                   }}
                   className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500 text-sky-600 dark:text-sky-400 hover:text-white dark:hover:text-slate-950 border border-sky-500/30 text-xs font-semibold transition-all cursor-pointer"
                 >
-                  <span>Gunakan</span>
+                  <span>Use Template</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>

@@ -100,22 +100,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleClearClick = async () => {
     const confirmed = await confirmDialog({
-      title: 'Kosongkan Seluruh Canvas?',
-      text: 'Semua tabel dan relasi yang ada di canvas akan dihapus.',
-      confirmText: 'Ya, Kosongkan',
-      cancelText: 'Batal',
+      title: 'Clear Entire Canvas?',
+      text: 'All tables and relationships on the canvas will be removed.',
+      confirmText: 'Yes, Clear All',
+      cancelText: 'Cancel',
       isDangerous: true,
     });
 
     if (confirmed) {
       onClearCanvas();
-      showToast('Canvas telah dikosongkan', 'info');
+      showToast('Canvas cleared', 'info');
     }
   };
 
   const handleAutoLayoutClick = () => {
     onAutoLayout();
-    showToast('Tata letak tabel berhasil dirapikan', 'info');
+    showToast('Auto layout applied', 'info');
   };
 
   const currentDialectObj =
@@ -141,10 +141,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             onChange={(e) => setProjectName(e.target.value)}
             className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-950 px-2 py-1 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 border border-transparent focus:border-sky-500/50 outline-none transition-all w-28 sm:w-40 md:w-48"
             placeholder="Untitled Schema"
-            title="Ubah Nama Project"
+            title="Rename Project"
           />
           <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-[10px] font-mono text-slate-500 dark:text-slate-400 hidden md:inline-block">
-            {totalTables} {totalTables === 1 ? 'tabel' : 'tabel'}
+            {totalTables} {totalTables === 1 ? 'table' : 'tables'}
           </span>
         </div>
 
@@ -154,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={() => setIsDialectOpen((prev) => !prev)}
             className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all cursor-pointer shadow-xs"
-            title="Pilih Dialek SQL"
+            title="Select SQL Dialect"
           >
             <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
               {currentDialectObj.badge}
@@ -171,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {isDialectOpen && (
             <div className="absolute left-0 top-full mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                Dialek SQL
+                SQL Dialect
               </div>
               <div className="space-y-0.5">
                 {DIALECT_OPTIONS.map((d) => {
@@ -183,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={() => {
                         setDialect(d.id);
                         setIsDialectOpen(false);
-                        showToast(`Dialek diubah ke ${d.label}`, 'info');
+                        showToast(`Dialect changed to ${d.label}`, 'info');
                       }}
                       className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         isSelected
@@ -219,11 +219,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           type="button"
           onClick={onOpenCommandPalette}
           className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-medium transition-all cursor-pointer shadow-xs group"
-          title="Buka Pencarian Cepat & Command Palette (Ctrl+K)"
+          title="Quick Search & Command Palette (Ctrl+K)"
         >
           <Search className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 group-hover:scale-110 transition-transform" />
-          <span className="hidden lg:inline text-slate-400">Cari tabel, kolom, aksi...</span>
-          <span className="lg:hidden hidden sm:inline text-slate-400">Cari...</span>
+          <span className="hidden lg:inline text-slate-400">Search tables, columns, actions...</span>
+          <span className="lg:hidden hidden sm:inline text-slate-400">Search...</span>
           <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700/80 rounded shadow-2xs">
             Ctrl K
           </kbd>
@@ -271,7 +271,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={handleAutoLayoutClick}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-            title="Tata ulang seluruh tata letak canvas secara otomatis"
+            title="Auto-organize full canvas layout"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
             <span className="hidden xl:inline">Auto Layout</span>
@@ -283,10 +283,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={onTidyOverlaps}
               className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-              title="Pisahkan tabel yang saling bertumpuk (Tidy Overlaps)"
+              title="Resolve overlapping tables (Tidy Overlaps)"
             >
               <Wand2 className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-              <span className="hidden xl:inline">Rapikan Tabrakan</span>
+              <span className="hidden xl:inline">Tidy Overlaps</span>
             </button>
           )}
 
@@ -295,7 +295,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onOpenTemplatesModal}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-            title="Pilih Template Database Siap Pakai"
+            title="Browse Database Templates"
           >
             <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
             <span className="hidden xl:inline">Templates</span>
@@ -306,7 +306,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onOpenImportModal}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-            title="Import Skrip SQL DDL"
+            title="Import SQL DDL Script"
           >
             <FolderDown className="w-3.5 h-3.5" />
             <span className="hidden xl:inline">Import</span>
@@ -318,7 +318,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={onStartPresentation}
               className="flex items-center gap-1.5 px-2 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-xs font-medium transition-all cursor-pointer"
-              title="Mode Presentasi / Zen Showcase (Alt+P)"
+              title="Presentation Mode (Alt+P)"
             >
               <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500/20" />
               <span className="hidden xl:inline">Present</span>
@@ -333,11 +333,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onAddTable}
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-semibold text-xs transition-all shadow-xs shadow-sky-500/20 cursor-pointer"
-            title="Tambah Tabel Baru"
+            title="Create New Table"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">Tabel Baru</span>
-            <span className="sm:hidden">Tabel</span>
+            <span className="hidden sm:inline">New Table</span>
+            <span className="sm:hidden">Table</span>
           </button>
 
           {/* Export Modal Button */}
@@ -345,7 +345,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onOpenExportModal}
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs font-medium transition-all shadow-xs cursor-pointer hover:border-sky-500/50"
-            title="Export ERD ke SQL, PNG, PDF, JSON, dsb"
+            title="Export ERD (SQL, PNG, PDF, JSON)"
           >
             <Download className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
             <span>Export</span>
@@ -358,7 +358,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={onToggleTheme}
-            title={theme === 'dark' ? 'Ganti ke Light Mode' : 'Ganti ke Dark Mode'}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/70 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all cursor-pointer shadow-xs"
           >
             {theme === 'dark' ? (
@@ -373,7 +373,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={handleClearClick}
             className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/70 hover:bg-rose-500/20 border border-slate-200 dark:border-slate-800 hover:border-rose-500/40 text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-all cursor-pointer shadow-xs"
-            title="Kosongkan Seluruh Canvas"
+            title="Clear Canvas"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

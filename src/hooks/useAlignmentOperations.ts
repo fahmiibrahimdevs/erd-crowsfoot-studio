@@ -24,7 +24,7 @@ export function useAlignmentOperations({
   const handleAlignTables = useCallback(
     (mode: AlignMode, targetIds: string[]) => {
       if (!targetIds || targetIds.length < 2) {
-        showToast('Pilih minimal 2 tabel untuk meratakan posisi', 'info');
+        showToast('Select at least 2 tables to align', 'info');
         return;
       }
 
@@ -36,7 +36,7 @@ export function useAlignmentOperations({
       );
 
       if (!newPositions) {
-        showToast('Tidak ada tabel yang dapat diratakan atau posisi terkunci', 'warning');
+        showToast('No tables can be aligned or positions are locked', 'warning');
         return;
       }
 
@@ -59,15 +59,15 @@ export function useAlignmentOperations({
       );
 
       const labelMap: Record<AlignMode, string> = {
-        left: 'Rata Kiri (Align Left)',
-        center: 'Rata Tengah Horizontal (Align Center)',
-        right: 'Rata Kanan (Align Right)',
-        top: 'Rata Atas (Align Top)',
-        middle: 'Rata Tengah Vertikal (Align Middle)',
-        bottom: 'Rata Bawah (Align Bottom)',
+        left: 'Align Left',
+        center: 'Align Center',
+        right: 'Align Right',
+        top: 'Align Top',
+        middle: 'Align Middle',
+        bottom: 'Align Bottom',
       };
 
-      showToast(`Posisi ${targetIds.length} tabel diselaraskan: ${labelMap[mode]}`, 'success');
+      showToast(`Aligned ${targetIds.length} tables: ${labelMap[mode]}`, 'success');
     },
     [lockedNodeIdsRef, nodesRef, setNodes, updateSchema]
   );
@@ -75,7 +75,7 @@ export function useAlignmentOperations({
   const handleDistributeTables = useCallback(
     (mode: DistributeMode, targetIds: string[]) => {
       if (!targetIds || targetIds.length < 2) {
-        showToast('Pilih minimal 2 tabel untuk meratakan jarak', 'info');
+        showToast('Select at least 2 tables to distribute', 'info');
         return;
       }
 
@@ -87,7 +87,7 @@ export function useAlignmentOperations({
       );
 
       if (!newPositions) {
-        showToast('Tidak dapat mendistribusikan posisi tabel', 'warning');
+        showToast('Unable to distribute tables', 'warning');
         return;
       }
 
@@ -109,8 +109,8 @@ export function useAlignmentOperations({
         newPositions
       );
 
-      const label = mode === 'horizontal' ? 'Secara Horizontal' : 'Secara Vertikal';
-      showToast(`Jarak spasi ${targetIds.length} tabel diratakan ${label}`, 'success');
+      const label = mode === 'horizontal' ? 'Horizontally' : 'Vertically';
+      showToast(`Distributed ${targetIds.length} tables ${label}`, 'success');
     },
     [lockedNodeIdsRef, nodesRef, setNodes, updateSchema]
   );
@@ -124,7 +124,7 @@ export function useAlignmentOperations({
       );
 
       if (movedCount === 0) {
-        showToast('Tidak ada tabel yang saling bertumpuk di canvas!', 'info');
+        showToast('No overlapping tables found on canvas!', 'info');
         return;
       }
 
@@ -146,7 +146,7 @@ export function useAlignmentOperations({
         newPositions
       );
 
-      showToast(`Berhasil merapikan ${movedCount} tabel yang saling bertumpuk!`, 'success');
+      showToast(`Successfully resolved overlaps for ${movedCount} tables!`, 'success');
     },
     [lockedNodeIdsRef, nodesRef, setNodes, updateSchema]
   );

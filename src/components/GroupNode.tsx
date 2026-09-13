@@ -47,9 +47,9 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const confirmed = await confirmDialog({
-      title: `Hapus Grup "${group.name}"?`,
-      text: `Apakah Anda ingin menghapus grup beserta seluruh ${tableCount} tabel di dalamnya?`,
-      confirmText: 'Hapus Grup & Tabel',
+      title: `Delete Group "${group.name}"?`,
+      text: `Are you sure you want to delete this group and all ${tableCount} tables inside it?`,
+      confirmText: 'Delete Group & Tables',
       isDangerous: true,
     });
     if (confirmed) {
@@ -113,21 +113,21 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             <div
               onDoubleClick={() => setIsEditing(true)}
               className="flex items-center gap-1.5 cursor-pointer nodrag shrink-0 whitespace-nowrap"
-              title="Klik 2x untuk ubah nama grup"
+              title="Double-click to rename group"
             >
               <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 tracking-tight truncate max-w-[180px] whitespace-nowrap shrink-0">
                 {group.name}
               </span>
               <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 whitespace-nowrap shrink-0">
-                {tableCount} tabel
+                {tableCount} {tableCount === 1 ? 'table' : 'tables'}
               </span>
               {nodeData.isLocked && (
                 <button
                   type="button"
-                  title="Posisi grup terkunci (Klik untuk membuka kunci)"
+                  title="Group position locked (Click to unlock)"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleLock?.([group.id]);
+                    nodeData.onToggleLock?.([group.id]);
                   }}
                   className="flex items-center text-amber-500 dark:text-amber-400 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] shrink-0 cursor-pointer nodrag transition-colors"
                 >
@@ -148,7 +148,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   e.stopPropagation();
                   onToggleLock([group.id]);
                 }}
-                title={nodeData.isLocked ? 'Buka Kunci Grup (Unlock)' : 'Kunci Posisi Grup (Lock)'}
+                title={nodeData.isLocked ? 'Unlock Group Position' : 'Lock Group Position'}
                 className={`p-1 rounded transition-colors cursor-pointer ${
                   nodeData.isLocked
                     ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-500/20'
@@ -163,7 +163,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                title="Ubah Nama Grup"
+                title="Rename Group"
                 className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 <Edit3 className="w-3 h-3" />
@@ -173,7 +173,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             <button
               type="button"
               onClick={handleUngroup}
-              title="Bubarkan Grup (Ungroup) - Pisahkan tabel kembali"
+              title="Ungroup (Dissolve group container)"
               className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
             >
               <Unlock className="w-3 h-3 text-sky-500" />
@@ -183,7 +183,7 @@ export const GroupNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             <button
               type="button"
               onClick={handleDelete}
-              title="Hapus Grup dan seluruh tabel di dalamnya"
+              title="Delete group and all member tables"
               className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
             >
               <Trash2 className="w-3 h-3" />

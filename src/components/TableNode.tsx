@@ -62,15 +62,15 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
   const handleDeleteTable = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const confirmed = await confirmDialog({
-      title: 'Hapus Tabel?',
-      text: `Apakah Anda yakin ingin menghapus tabel "${table.name}"?`,
-      confirmText: 'Hapus Tabel',
+      title: 'Delete Table?',
+      text: `Are you sure you want to delete table "${table.name}"?`,
+      confirmText: 'Delete Table',
       isDangerous: true,
     });
 
     if (confirmed) {
       onDeleteTable?.(table.id);
-      showToast(`Tabel "${table.name}" telah dihapus`, 'info');
+      showToast(`Table "${table.name}" deleted`, 'info');
     }
   };
 
@@ -168,12 +168,12 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             {table.name}
           </span>
           <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded border border-slate-300/60 dark:border-slate-700/50 shrink-0 whitespace-nowrap">
-            {table.columns.length} kolom
+            {table.columns.length} cols
           </span>
           {nodeData.isLocked && (
             <button
               type="button"
-              title="Posisi tabel terkunci (Klik untuk membuka kunci)"
+              title="Table position locked (Click to unlock)"
               onClick={(e) => {
                 e.stopPropagation();
                 nodeData.onToggleLock?.([table.id]);
@@ -190,7 +190,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           {nodeData.onToggleLock && (
             <button
               type="button"
-              title={nodeData.isLocked ? 'Buka Kunci Posisi (Unlock)' : 'Kunci Posisi Tabel (Lock)'}
+              title={nodeData.isLocked ? 'Unlock Table Position' : 'Lock Table Position'}
               onClick={(e) => {
                 e.stopPropagation();
                 nodeData.onToggleLock?.([table.id]);
@@ -208,7 +208,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           {nodeData.onSortColumns && table.columns.length > 1 && (
             <button
               type="button"
-              title="Rapikan Urutan Kolom (PK → FK → Atribut → Timestamps)"
+              title="Sort Columns (PK → FK → Attributes → Timestamps)"
               onClick={(e) => {
                 e.stopPropagation();
                 nodeData.onSortColumns?.(table.id);
@@ -220,7 +220,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
           )}
 
           <button
-            title="Tambah Kolom"
+            title="Add Column"
             onClick={(e) => {
               e.stopPropagation();
               onAddColumn?.(table.id);
@@ -230,7 +230,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
             <Plus className="w-3.5 h-3.5" />
           </button>
           <button
-            title="Hapus Tabel"
+            title="Delete Table"
             onClick={handleDeleteTable}
             className="p-1 rounded hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer nodrag"
           >
@@ -277,7 +277,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                 }}
                 title={
                   foreignKeys[col.id] || col.isPrimary
-                    ? `Klik untuk sorot relasi garis database (${table.name}.${col.name})`
+                    ? `Click to highlight relationship lines (${table.name}.${col.name})`
                     : undefined
                 }
                 className={`relative px-2.5 h-8 flex items-center justify-between text-xs transition-all group/row cursor-pointer ${
@@ -294,7 +294,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   isConnectable={true}
                   isConnectableStart={true}
                   isConnectableEnd={true}
-                  title={`Port Kiri: Hubungkan relasi ke/dari ${table.name}.${col.name}`}
+                  title={`Left Port: Connect relationship to/from ${table.name}.${col.name}`}
                   className={`table-handle nodrag nopan !left-[-4.5px] ${
                     isColHighlighted ? '!ring-2 !ring-sky-400 !scale-125 !bg-sky-400' : ''
                   } ${col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'}`}
@@ -304,7 +304,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                 <div className="flex items-center gap-1.5 min-w-0">
                   {/* Grip Drag Handle */}
                   <span
-                    title="Tarik untuk memindahkan urutan kolom"
+                    title="Drag to reorder column"
                     className="opacity-0 group-hover/row:opacity-70 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-sky-400 nodrag p-0.5 shrink-0 export-hide"
                   >
                     <GripVertical className="w-3 h-3" />
@@ -391,7 +391,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                     <button
                       type="button"
                       onClick={(e) => toggleEnumExpand(col.id, e)}
-                      title={`Klik untuk melihat/tutup nilai opsi ${typeMeta.fullTooltip}`}
+                      title={`Click to toggle enum options ${typeMeta.fullTooltip}`}
                       className={`font-mono text-[10px] px-1.5 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer nodrag ${
                         isEnumExpanded
                           ? 'bg-sky-500/25 text-sky-600 dark:text-sky-300 border border-sky-400/50 shadow-sm ring-1 ring-sky-500/30'
@@ -424,7 +424,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                   isConnectable={true}
                   isConnectableStart={true}
                   isConnectableEnd={true}
-                  title={`Port Kanan: Hubungkan relasi ke/dari ${table.name}.${col.name}`}
+                  title={`Right Port: Connect relationship to/from ${table.name}.${col.name}`}
                   className={`table-handle nodrag nopan !right-[-4.5px] ${
                     isColHighlighted ? '!ring-2 !ring-sky-400 !scale-125 !bg-sky-400' : ''
                   } ${col.isPrimary ? 'table-handle-pk' : 'table-handle-fk'}`}
@@ -461,7 +461,7 @@ export const TableNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
         className="w-full py-1.5 px-3 bg-slate-50/80 dark:bg-slate-950/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 flex items-center justify-center gap-1.5 transition-colors cursor-pointer rounded-b-xl nodrag export-hide"
       >
         <Plus className="w-3 h-3" />
-        <span>Tambah Kolom</span>
+        <span>Add Column</span>
       </button>
     </div>
   );

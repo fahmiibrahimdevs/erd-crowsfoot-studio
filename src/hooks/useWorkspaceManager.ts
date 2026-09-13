@@ -312,7 +312,7 @@ export function useWorkspaceManager({
         setSelectedGroupId(null);
         setSelectedRelationId(null);
 
-        showToast(`Membuka diagram: ${targetFile.name}`, 'info');
+        showToast(`Opening diagram: ${targetFile.name}`, 'info');
         setTimeout(() => {
           fitView();
         }, 100);
@@ -378,7 +378,7 @@ export function useWorkspaceManager({
       setSelectedGroupId(null);
       setSelectedRelationId(null);
 
-      showToast(`File diagram "${fileName}" berhasil dibuat`, 'success');
+      showToast(`Diagram file "${fileName}" created`, 'success');
     },
     [activeFileId, dialect, getNodePositions, groups, projectName, relations, resetHistory, setDialect, setProjectName, setSelectedGroupId, setSelectedRelationId, setSelectedTableId, setSelectedTableIds, tables]
   );
@@ -398,7 +398,7 @@ export function useWorkspaceManager({
     };
 
     setWorkspaceItems((prev) => [...prev, newFolder]);
-    showToast(`Folder "${cleanName}" dibuat`, 'success');
+    showToast(`Folder "${cleanName}" created`, 'success');
   }, []);
 
   const handleRenameWorkspaceItem = useCallback(
@@ -422,7 +422,7 @@ export function useWorkspaceManager({
           return item;
         })
       );
-      showToast('Nama berhasil diubah', 'success');
+      showToast('Renamed successfully', 'success');
     },
     [activeFileId, setProjectName]
   );
@@ -495,7 +495,7 @@ export function useWorkspaceManager({
           setSelectedRelationId(null);
         }
 
-        showToast(`"${target.name}" berhasil dihapus`, 'info');
+        showToast(`"${target.name}" deleted`, 'info');
         return nextItems;
       });
     },
@@ -546,7 +546,7 @@ export function useWorkspaceManager({
         setSelectedTableIds([]);
         setSelectedGroupId(null);
         setSelectedRelationId(null);
-        showToast(`File duplikat "${duplicateName}" dibuat!`, 'success');
+        showToast(`Duplicate file "${duplicateName}" created!`, 'success');
 
         return [...prevItems, duplicateFile];
       });
@@ -560,7 +560,7 @@ export function useWorkspaceManager({
         | ErdFileItem
         | undefined;
       if (!targetFile) {
-        showToast('File tidak ditemukan', 'error');
+        showToast('File not found', 'error');
         return;
       }
 
@@ -588,7 +588,7 @@ export function useWorkspaceManager({
         : `${fileDataToExport.name}.erd`;
       link.click();
       URL.revokeObjectURL(url);
-      showToast(`File "${link.download}" berhasil diunduh!`, 'success');
+      showToast(`Diagram "${link.download}" downloaded!`, 'success');
     },
     [workspaceItems, activeFileId, projectName, dialect, tables, relations, groups, getNodePositions]
   );
@@ -651,12 +651,12 @@ export function useWorkspaceManager({
           setSelectedTableIds([]);
           setSelectedGroupId(null);
           setSelectedRelationId(null);
-          showToast(`File diagram "${fileName}" berhasil diimpor!`, 'success');
+          showToast(`Diagram "${fileName}" imported successfully!`, 'success');
           setTimeout(() => {
             fitView();
           }, 100);
         } catch {
-          showToast('Gagal membaca file diagram: format JSON tidak valid', 'error');
+          showToast('Failed to parse diagram file: invalid JSON format', 'error');
         }
       };
       reader.readAsText(file);
@@ -689,7 +689,7 @@ export function useWorkspaceManager({
           const descendantIds = getAllDescendantIds(prev, itemId);
           if (descendantIds.has(targetParentId)) {
             showToast(
-              'Tidak dapat memindahkan folder ke dalam dirinya sendiri atau subfolder di dalamnya',
+              'Cannot move a folder into itself or its own subfolder',
               'error'
             );
             return prev;
@@ -699,7 +699,7 @@ export function useWorkspaceManager({
         const targetFolder = targetParentId ? prev.find((i) => i.id === targetParentId) : null;
         const targetName = targetFolder ? `folder "${targetFolder.name}"` : 'Root';
 
-        showToast(`"${item.name}" dipindahkan ke ${targetName}`, 'success');
+        showToast(`"${item.name}" moved to ${targetName}`, 'success');
 
         return prev.map((i) => (i.id === itemId ? { ...i, parentId: targetParentId } : i));
       });

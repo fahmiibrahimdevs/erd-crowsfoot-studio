@@ -21,7 +21,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   value,
   onChange,
   options,
-  placeholder = 'Pilih opsi...',
+  placeholder = 'Select option...',
   className = '',
   threshold = 5,
   allowCustom = true,
@@ -146,7 +146,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Ketik tipe data atau cari..."
+                  placeholder="Type data type or search..."
                   value={search}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && search.trim()) {
@@ -169,7 +169,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             >
               <div className="flex items-center gap-1.5 truncate">
                 <Plus className="w-3.5 h-3.5 shrink-0 text-sky-500 dark:text-sky-400" />
-                <span>Gunakan tipe: <strong className="text-slate-900 dark:text-slate-100">{search.trim()}</strong></span>
+                <span>Use custom type: <strong className="text-slate-900 dark:text-slate-100">{search.trim()}</strong></span>
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans shrink-0 ml-1">Enter ↵</span>
             </div>
@@ -179,11 +179,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
           <div className="max-h-60 overflow-y-auto p-1 divide-y divide-slate-100 dark:divide-slate-800/40">
             {filteredOptions.length === 0 && !search.trim() ? (
               <div className="py-3 text-center text-slate-400 dark:text-slate-500 text-[11px]">
-                Tidak ada opsi data
+                No options found
               </div>
             ) : filteredOptions.length === 0 && search.trim() ? (
               <div className="py-2.5 text-center text-slate-600 dark:text-slate-400 text-[11px]">
-                Tekan <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sky-600 dark:text-sky-400 font-mono text-[10px]">Enter</kbd> untuk menggunakan <span className="font-mono text-slate-800 dark:text-slate-200">"{search.trim()}"</span>
+                Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sky-600 dark:text-sky-400 font-mono text-[10px]">Enter</kbd> to use <span className="font-mono text-slate-800 dark:text-slate-200">"{search.trim()}"</span>
               </div>
             ) : (
               <>

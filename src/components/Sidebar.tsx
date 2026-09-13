@@ -87,21 +87,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleDeleteRelationClick = async (e: React.MouseEvent, relId: string) => {
     e.stopPropagation();
     const confirmed = await confirmDialog({
-      title: 'Hapus Relasi?',
-      text: 'Garis hubungan antar tabel ini akan dilepas dari skema database.',
-      confirmText: 'Hapus Relasi',
+      title: 'Delete Relationship?',
+      text: 'This relationship line between tables will be removed from the schema.',
+      confirmText: 'Delete Relation',
       isDangerous: true,
     });
 
     if (confirmed) {
       onDeleteRelation(relId);
-      showToast('Relasi berhasil dihapus', 'info');
+      showToast('Relationship deleted successfully', 'info');
     }
   };
 
   return (
     <aside className="w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex flex-col h-[calc(100vh-3.5rem)] shrink-0 z-20 transition-colors">
-      {/* Top Main Mode Switcher: [📁 Explorer] vs [📑 Skema Aktif] */}
+      {/* Top Main Mode Switcher: [📁 Explorer] vs [📑 Schema] */}
       <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40">
         <div className="flex bg-slate-200/70 dark:bg-slate-950/80 p-1 rounded-xl gap-1">
           <button
@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }`}
           >
             <Database className="w-3.5 h-3.5" />
-            <span>Tabel & Relasi</span>
+            <span>Tables & Relations</span>
           </button>
         </div>
       </div>
@@ -154,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Cari tabel..."
+                placeholder="Search tables..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500/60 focus:bg-white dark:focus:bg-slate-950 transition-colors font-medium"
@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Table2 className="w-3.5 h-3.5" />
-              <span>Tabel</span>
+              <span>Tables</span>
               <span className="text-[10px] font-mono opacity-80">({tables.length})</span>
             </button>
 
@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <GitFork className="w-3.5 h-3.5" />
-              <span>Relasi</span>
+              <span>Relations</span>
               <span className="text-[10px] font-mono opacity-80">({relations.length})</span>
             </button>
 
@@ -210,8 +210,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {filteredTables.length === 0 ? (
               <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                 {tables.length === 0
-                  ? 'Belum ada tabel di canvas'
-                  : 'Tabel tidak ditemukan'}
+                  ? 'No tables on canvas yet'
+                  : 'No tables found'}
               </div>
             ) : (
               filteredTables.map((table) => {
@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           e.stopPropagation();
                           onFocusTable(table.id);
                         }}
-                        title="Fokuskan tampilan ke tabel ini"
+                        title="Focus on this table"
                         className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-sky-500 dark:hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <Focus className="w-3 h-3" />
@@ -264,16 +264,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-[11px] text-slate-700 dark:text-slate-300 space-y-1">
               <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
                 <Info className="w-3.5 h-3.5 shrink-0" />
-                <span>Cara Menghubungkan Relasi</span>
+                <span>How to Connect Relations</span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
-                Tarik bulatan handle dari sisi kolom <strong className="text-slate-800 dark:text-slate-200">FK</strong> tabel satu ke bulatan kolom <strong className="text-slate-800 dark:text-slate-200">PK</strong> tabel lain di canvas.
+                Drag handle port from a <strong className="text-slate-800 dark:text-slate-200">FK</strong> column to a <strong className="text-slate-800 dark:text-slate-200">PK</strong> column on another table.
               </p>
             </div>
 
             {relations.length === 0 ? (
               <div className="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-                Belum ada relasi antar tabel
+                No relationships yet
               </div>
             ) : (
               relations.map((rel) => {
@@ -304,7 +304,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                         <button
                           onClick={(e) => handleDeleteRelationClick(e, rel.id)}
-                          title="Hapus Relasi"
+                          title="Delete Relationship"
                           className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -331,14 +331,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {activeTab === 'primitives' && (
           <div className="space-y-1.5">
             <p className="text-[11px] text-slate-500 px-1 py-0.5">
-              Klik untuk menambah template tabel siap pakai ke canvas:
+              Click to add pre-built table template to canvas:
             </p>
             {QUICK_TEMPLATES.map((tmpl) => (
               <div
                 key={tmpl.name}
                 onClick={() => {
                   onAddQuickTable(tmpl.name);
-                  showToast(`Tabel template "${tmpl.name}" ditambahkan!`);
+                  showToast(`Table template "${tmpl.name}" added!`);
                 }}
                 className="group p-2 rounded-lg bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-sky-500/60 hover:bg-white dark:hover:bg-slate-900/80 cursor-pointer transition-all"
               >
@@ -364,19 +364,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Tabel</div>
+                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Tables</div>
                 <div className="text-slate-800 dark:text-slate-100 font-mono font-semibold text-xs">
                   {tables.length}
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Kolom</div>
+                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Columns</div>
                 <div className="text-slate-800 dark:text-slate-100 font-mono font-semibold text-xs">
                   {totalColumns}
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Relasi</div>
+                <div className="text-slate-500 dark:text-slate-400 text-[10px]">Relations</div>
                 <div className="text-slate-800 dark:text-slate-100 font-mono font-semibold text-xs">
                   {relations.length}
                 </div>

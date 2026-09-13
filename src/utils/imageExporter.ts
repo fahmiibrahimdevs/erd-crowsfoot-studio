@@ -226,7 +226,7 @@ export const generateDiagramImage = async (
 ): Promise<{ dataUrl: string; width: number; height: number; filename: string }> => {
   const viewportElem = document.querySelector('.react-flow__viewport') as HTMLElement | null;
   if (!viewportElem) {
-    throw new Error('Gagal menemukan elemen kanvas diagram (.react-flow__viewport)');
+    throw new Error('Failed to find diagram canvas element (.react-flow__viewport)');
   }
 
   const {
@@ -357,7 +357,7 @@ export const copyDiagramImageToClipboard = async (
 ): Promise<void> => {
   const viewportElem = document.querySelector('.react-flow__viewport') as HTMLElement | null;
   if (!viewportElem) {
-    throw new Error('Gagal menemukan elemen kanvas diagram');
+    throw new Error('Failed to find diagram canvas element');
   }
 
   const {
@@ -439,7 +439,7 @@ export const copyDiagramImageToClipboard = async (
     });
 
     if (!blob) {
-      throw new Error('Gagal merender blob gambar');
+      throw new Error('Failed to render diagram image blob');
     }
 
     await navigator.clipboard.write([
